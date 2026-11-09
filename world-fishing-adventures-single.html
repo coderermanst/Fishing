@@ -1,450 +1,1684 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"><title>World Fishing Adventures</title><style>*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;height:100%;overflow:hidden;background:#0b1530;font-family:system-ui,"Segoe UI",Roboto,sans-serif;color:#fff;user-select:none}
-#c{position:fixed;inset:0;width:100vw;height:100vh;display:block;touch-action:none}
-#hud{position:fixed;top:0;left:0;right:0;display:flex;justify-content:space-between;gap:6px;padding:6px;flex-wrap:wrap;pointer-events:none}
-#stat,#nav{display:flex;gap:6px;flex-wrap:wrap;pointer-events:auto}
-.chip{background:#0b1a3acc;border:1px solid #fff3;border-radius:10px;padding:6px 10px;font-weight:600;font-size:14px}
-button{font:inherit;color:#fff;background:linear-gradient(#2f86e8,#1b57b0);border:0;border-radius:10px;padding:8px 12px;cursor:pointer;font-weight:700}
-button:hover{filter:brightness(1.15)}button:disabled{filter:grayscale(1) brightness(.6);cursor:not-allowed}
-.nb{background:#0b1a3acc;border:1px solid #fff3;padding:6px 10px;font-size:14px}
-.gold{background:linear-gradient(#ffc83d,#d98a00);color:#2a1a00}.red{background:linear-gradient(#e85454,#a52323)}.grn{background:linear-gradient(#3cc46a,#1b8a45)}
-#hint{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);background:#0b1a3acc;padding:6px 14px;border-radius:20px;font-size:14px;font-weight:600;max-width:60vw;text-align:center}
-#fishBtn{position:fixed;right:16px;bottom:16px;width:104px;height:104px;border-radius:50%;font-size:19px;line-height:1.1;background:radial-gradient(#ff9a4d,#d8431a);box-shadow:0 6px 0 #8a2a10,0 8px 20px #0008;touch-action:none}
-#fishBtn.on,#fishBtn:active{transform:translateY(4px);box-shadow:0 2px 0 #8a2a10}
-#ov,#md{position:fixed;inset:0;pointer-events:none}
-#ov:not(:empty),#md:not(:empty){pointer-events:auto;background:#050c22b0;display:flex;align-items:center;justify-content:center;padding:8px}
-#md{z-index:5}
-.panel{background:linear-gradient(#17325f,#0e1f40);border:2px solid #5b8fd8;border-radius:16px;width:min(980px,100%);max-height:100%;display:flex;flex-direction:column;box-shadow:0 10px 40px #000a}
-.ph{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid #fff2}.ph h2{margin:0;font-size:22px}
-.pb{padding:14px;overflow:auto}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
-.card{background:#0a1730;border:2px solid #2f4f86;border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:6px;font-size:14px}
-.card.lock{opacity:.5}.card.cur{border-color:#ffc83d}.card h4{margin:0;font-size:16px}.sm{font-size:12px;opacity:.8}
-.bar{height:7px;background:#fff2;border-radius:4px;overflow:hidden}.bar i{display:block;height:100%;background:#4aa3ff}
-.row{display:flex;align-items:center;gap:10px;padding:6px;border-bottom:1px solid #fff1}.row img{width:60px;height:30px}.row .g{flex:1}
-.book .card{cursor:pointer;align-items:center;text-align:center}.book img{width:110px;height:55px}
-.modal{background:linear-gradient(#1c3a6e,#0e1f40);border:3px solid var(--c,#5b8fd8);box-shadow:0 0 40px var(--c,#5b8fd8);border-radius:18px;padding:18px;text-align:center;width:min(420px,100%);max-height:100%;overflow:auto;animation:pop .35s}
-.modal img{width:220px;height:110px;filter:drop-shadow(0 0 12px var(--c))}.modal h2{margin:6px 0}.tag{display:inline-block;padding:2px 10px;border-radius:12px;font-weight:800;color:#000}
-.legend{animation:pop .35s,glow 1s infinite alternate}
-@keyframes pop{from{transform:scale(.6);opacity:0}}@keyframes glow{to{box-shadow:0 0 90px var(--c)}}
-#toasts{position:fixed;top:58px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none;z-index:9}
-.toast{background:#0b1a3af0;border:2px solid #5b8fd8;padding:8px 16px;border-radius:12px;font-weight:700;animation:pop .25s}.toast.bad{border-color:#e85454}.toast.good{border-color:#ffc83d}
-.title{text-align:center;padding:20px}.title h1{font-size:clamp(30px,7vw,60px);margin:0 0 6px;color:#ffd04d;text-shadow:0 4px 0 #a35a00}.title button{display:block;margin:10px auto;width:240px;font-size:18px}
-input[type=range],select,textarea{width:100%;font:inherit}textarea{height:80px;background:#0a1730;color:#fff;border:1px solid #5b8fd8;border-radius:8px}
-@media(max-width:700px){#fishBtn{width:120px;height:120px}.chip,.nb{font-size:12px;padding:5px 7px}}
-</style></head><body>
-<canvas id="c"></canvas>
-<div id="hud"><div id="stat"></div><div id="nav"></div></div>
-<div id="hint"></div>
-<button id="fishBtn">🎣<br>FISH</button>
-<div id="ov"></div><div id="md"></div><div id="toasts"></div>
-<div id="err" style="display:none;position:fixed;inset:0;z-index:99;background:#300;color:#fff;padding:20px;font:16px system-ui;overflow:auto"></div>
-<script>function showErr(m){var e=document.getElementById('err');e.style.display='block';e.innerHTML+='<p>'+m+'</p>'}
-window.onerror=function(m,s,l){showErr('Error: '+m+' ('+(s||'').split('/').pop()+':'+l+')')};
-window.addEventListener('load',function(){if(typeof Game==='undefined')showErr('The game scripts did not load. Make sure ALL files (fish.js, game.js, fishing.js, etc.) are in the same folder as index.html.')});</script>
-<script>// ===== FISH DATABASE =====
-// To add a fish: copy a line, change the info. The game recognises it automatically.
-// F(name, locationId, rarity, minKg, maxKg, {options})
-// rarity: common|uncommon|rare|epic|legendary|mythical|secret   locationId: see locations.js
-// options (all optional): t:'day'|'night'  wx:'clear'|'cloudy'|'rain'|'snow'  se:'spring'|'summer'|'autumn'|'winter'
-//   dp:1 (deep-water fish)  d:1-10 difficulty  s:1-10 speed  v:base value  pref:'worm'|'minnow'|'golden'  desc:'text'
-// Anything you leave out is calculated automatically (difficulty, speed, value, description, sprite).
-const RARITIES={common:{w:60,c:'#aab4bd',base:8,d:2},uncommon:{w:25,c:'#5cc46a',base:22,d:3.5},rare:{w:9,c:'#4aa3ff',base:70,d:5},epic:{w:3.5,c:'#b05cff',base:220,d:6.5},legendary:{w:1.2,c:'#ffb020',base:800,d:8},mythical:{w:.3,c:'#ff4f9a',base:3000,d:9.2},secret:{w:.05,c:'#26f0e0',base:12000,d:10}};
-const RARITY_ORDER=Object.keys(RARITIES);
-const FISH_RAW=[];let FISH=[],FISH_BY_ID={};
-const F=(n,l,r,a,b,o)=>FISH_RAW.push(Object.assign({n,l,r,w:[a,b]},o));
-const hash=s=>{let h=7;for(const c of s)h=(h*31+c.charCodeAt(0))>>>0;return h};
-// ---- North America
-F('Bluegill','everglades','common',.1,.6);
-F('Largemouth Bass','everglades','uncommon',1,6,{pref:'minnow'});
-F('Alligator Gar','everglades','rare',8,70,{t:'night'});
-F('Swamp Phantom Snook','everglades','secret',4,20,{t:'night',wx:'rain'});
-F('Yellow Perch','greatlakes','common',.1,.9);
-F('Lake Trout','greatlakes','uncommon',2,20);
-F('Muskellunge','greatlakes','epic',6,30,{se:'autumn'});
-F('Lake Sturgeon','greatlakes','legendary',30,120,{t:'night'});
-F('Channel Catfish','mississippi','common',1,10);
-F('Paddlefish','mississippi','uncommon',8,40);
-F('Blue Catfish','mississippi','rare',15,60,{wx:'rain'});
-F('Leviathan Flathead','mississippi','mythical',60,150,{t:'night'});
-F('Yellowtail Snapper','caribbean','common',.5,4);
-F('Mahi-Mahi','caribbean','uncommon',4,20,{t:'day'});
-F('Blue Marlin','caribbean','epic',100,450,{dp:1});
-F('Golden Tarpon','caribbean','legendary',40,110,{t:'day'});
-F('Pink Salmon','alaska','common',1.5,4);
-F('King Salmon','alaska','rare',8,35,{se:'summer'});
-F('Pacific Halibut','alaska','epic',20,150,{dp:1});
-F('Aurora Dolly Varden','alaska','secret',1,4,{t:'night',se:'winter'});
-// ---- South America
-F('Red-Bellied Piranha','amazon','common',.3,1.5);
-F('Tambaqui','amazon','uncommon',5,30);
-F('Arapaima','amazon','epic',50,200,{t:'day'});
-F('El Dorado Pacu','amazon','legendary',8,25,{wx:'rain'});
-F('Brazilian Mullet','brazil','common',.3,2);
-F('Brazilian Snook','brazil','uncommon',2,12);
-F('Carnival Parrotfish','brazil','rare',2,10,{t:'day'});
-F('Atlantic Sailfish','brazil','epic',20,60,{dp:1});
-F('Rainbow Trout','patagonia','common',.5,4);
-F('Brown Trout','patagonia','uncommon',1,9);
-F('Patagonian Toothfish','patagonia','rare',10,80,{dp:1});
-F('Fuego Sea Serpent','patagonia','mythical',80,200,{wx:'rain',t:'night'});
-// ---- Europe
-F('Sardine','mediterranean','common',.05,.2);
-F('Gilt-head Bream','mediterranean','uncommon',1,6);
-F('Bluefin Tuna','mediterranean','epic',100,400,{dp:1,se:'summer'});
-F("Poseidon's Swordfish",'mediterranean','legendary',60,250,{t:'night',dp:1});
-F('Roach','britlakes','common',.1,1);
-F('Northern Pike','britlakes','uncommon',3,18);
-F('Mirror Carp','britlakes','rare',8,35,{t:'day'});
-F('Loch Wyrm Eel','britlakes','mythical',20,80,{t:'night',wx:'rain'});
-F('Atlantic Cod','fjords','common',2,15);
-F('Haddock','fjords','uncommon',1,6);
-F('Arctic Char','fjords','rare',1,9,{se:'winter'});
-F('Kraken Pup Anglerfish','fjords','secret',5,30,{dp:1,t:'night'});
-F('Zander','danube','common',1,8);
-F('Huchen','danube','uncommon',5,30,{se:'spring'});
-F('Wels Catfish','danube','rare',20,130,{t:'night'});
-F('Beluga Sturgeon','danube','legendary',100,400);
-// ---- Africa
-F('Nile Tilapia','nile','common',.3,3);
-F('Tigerfish','nile','uncommon',2,15);
-F('Nile Perch','nile','epic',20,150,{t:'day'});
-F("Pharaoh's Golden Mormyrid",'nile','secret',1,5,{t:'day'});
-F('Alestes Tetra','congo','common',.1,.8);
-F('Vundu Catfish','congo','uncommon',10,60);
-F('Goliath Tigerfish','congo','epic',20,70,{t:'day'});
-F('Zaire Lungfish','congo','legendary',5,25,{t:'night'});
-F('Victoria Cichlid','victoria','common',.1,.5);
-F('Semutundu Catfish','victoria','uncommon',1,8);
-F('Lake Nile Perch','victoria','rare',30,200);
-F('Sunrise Cichlid','victoria','mythical',.2,.6,{t:'day',se:'spring'});
-F('Cape Hake','afrcoast','common',1,6);
-F('Yellowfin Tuna','afrcoast','uncommon',10,80,{dp:1});
-F('Black Marlin','afrcoast','epic',100,450,{dp:1,t:'day'});
-F('Coelacanth','afrcoast','mythical',30,90,{dp:1,t:'night'});
-// ---- Asia
-F('Rohu','indian','common',1,12);
-F('Catla','indian','uncommon',3,30);
-F('Golden Mahseer','indian','rare',5,45,{se:'winter'});
-F('Ganges River Shark','indian','legendary',40,120,{wx:'rain'});
-F('Horse Mackerel','japan','common',.1,.7);
-F('Tai Red Seabream','japan','uncommon',1,9);
-F('Oarfish','japan','legendary',50,300,{dp:1,t:'night'});
-F("Ryujin's Golden Koi",'japan','mythical',5,25,{t:'day',wx:'rain'});
-F('Snakehead','mekong','common',1,8);
-F('Striped Catfish','mekong','uncommon',3,25);
-F('Giant Freshwater Stingray','mekong','epic',50,300);
-F('Mekong Giant Catfish','mekong','legendary',100,300,{se:'spring'});
-F('Milkfish','seasia','common',1,8);
-F('Giant Trevally','seasia','rare',10,60,{dp:1});
-F('Napoleon Wrasse','seasia','epic',20,100,{t:'day'});
-F('Ghost Mantaray','seasia','mythical',100,400,{t:'night'});
-F('Snow Trout','himalaya','common',.3,3);
-F('Alpine Loach','himalaya','uncommon',.1,.4);
-F('Sisor Catfish','himalaya','rare',.5,3,{t:'night'});
-F('Snow Leopard Trout','himalaya','legendary',3,15,{se:'winter'});
-// ---- Oceania
-F('Clownfish','reef','common',.05,.2);
-F('Parrotfish','reef','uncommon',1,8);
-F('Coral Trout','reef','rare',2,12);
-F('Rainbow Dreamfish','reef','secret',.5,3,{t:'day',wx:'clear'});
-F('Redfin Perch','murray','common',.3,2);
-F('Golden Perch','murray','uncommon',1,9);
-F('Murray Cod','murray','epic',10,90);
-F('Ancient Trout Cod','murray','legendary',5,25,{t:'night'});
-F('Bony Bream','billabong','common',.1,.4);
-F('Spangled Perch','billabong','uncommon',.2,1);
-F('Barramundi','billabong','rare',5,45,{se:'summer'});
-F('Dreamtime Barramundi','billabong','mythical',20,60,{wx:'rain',t:'night'});
-F('Koaro','nzlakes','common',.05,.3);
-F('Kahawai','nzlakes','uncommon',1,5);
-F('Taupo Monster Trout','nzlakes','epic',5,22);
-F('Taniwha Eel','nzlakes','legendary',20,90,{t:'night'});
-// ---- Antarctica
-F('Icefish','antarctic','common',.2,1);
-F('Antarctic Silverfish','antarctic','uncommon',.1,.4);
-F('Antarctic Toothfish','antarctic','rare',20,120,{dp:1});
-F('Crystal Ghostfish','antarctic','secret',1,6,{t:'night',wx:'snow'});
-F('Blue Whiting','southern','common',.2,1);
-F('Mackerel Icefish','southern','uncommon',.5,3);
-F('Southern Bluefin Tuna','southern','epic',50,200,{dp:1});
-F('Leviathan Eel','southern','mythical',100,300,{t:'night',dp:1});
-// ---- builder (do not edit) ----
-function buildFish(){
- FISH=[];FISH_BY_ID={};
- for(const o of FISH_RAW){
-  const li=LOCS.findIndex(l=>l.id===o.l),R=RARITIES[o.r];
-  if(li<0||!R||!o.w){console.warn('Fish skipped (bad location/rarity):',o.n);continue}
-  const avg=(o.w[0]+o.w[1])/2,h=hash(o.n+o.l),d=Math.min(10,R.d+Math.min(1.5,Math.log10(o.w[1]+1)*.6));
-  const loc=LOCS[li],cond=(o.t?(o.t==='night'?' Bites after dark.':' Bites by day.'):'')+(o.wx?` Appears in ${o.wx} weather.`:'')+(o.se?` Seen in ${o.se}.`:'');
-  const f=Object.assign({id:o.n.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'_'+o.l,d,s:Math.min(10,1+d*.7+(h%10)*.15),v:Math.round(R.base*(1+Math.sqrt(avg)/5)*(1+li*.1)),pref:['worm','minnow','golden'][h%3],dp:0,desc:`A ${o.r} catch of ${loc.n}.${cond}`},o);
-  if(FISH_BY_ID[f.id])continue;FISH.push(f);FISH_BY_ID[f.id]=f}
-}
-</script><script>// id|name|continent|catches needed to unlock|water top|water bottom|sky top|sky horizon|scenery|sea(1/0)|avg bite seconds|weather weights clear,cloudy,rain,snow
-const LOCS=`everglades|Florida Everglades|North America|0|#3b8a5a|#123b2c|#8fd6ff|#fff2c2|reeds|0|5|5,3,2,0
-greatlakes|Great Lakes|North America|5|#2d6fb5|#0d2f5a|#9cd3ff|#e8f4ff|hills|0|5|4,4,2,0
-mississippi|Mississippi River|North America|12|#7a6a3c|#3a3118|#bfe0ff|#ffe9b0|hills|0|5|4,3,3,0
-caribbean|Caribbean Waters|North America|20|#19c7d8|#0a4d7a|#7fe0ff|#fff6cc|palms|1|4|6,2,2,0
-alaska|Alaska|North America|30|#2b7fa3|#0b3350|#a7c8e8|#e9f1fb|peaks|0|6|3,3,1,3
-amazon|Amazon River|South America|40|#6b5a2c|#2a2410|#9fe0b0|#f4f0b0|jungle|0|5|3,2,5,0
-brazil|Brazilian Coastline|South America|55|#1fb0a8|#0a4a6a|#8fdcff|#ffe3a8|palms|1|5|5,3,2,0
-patagonia|Patagonia|South America|70|#3c8fb0|#123a58|#b5d0e8|#f2e8e0|peaks|0|6|3,4,2,1
-mediterranean|Mediterranean Sea|Europe|85|#1e90d0|#0a3b6e|#8fd8ff|#fff0c8|cliffs|1|5|7,2,1,0
-britlakes|British Lakes|Europe|100|#4a7a6a|#1a3a36|#b8cde0|#e8ecf0|hills|0|6|2,4,4,0
-fjords|Norwegian Fjords|Europe|120|#2a6a8a|#0a2a44|#a9c4dc|#eef2f8|cliffs|1|6|2,4,2,2
-danube|Danube River|Europe|140|#4a8a9a|#163f4c|#a8d8f0|#fdeec5|hills|0|5|4,3,3,0
-nile|Nile River|Africa|160|#7ba06a|#2a4a2c|#ffd89a|#fff4cc|dunes|0|5|8,1,0,0
-congo|Congo River|Africa|180|#6a5a30|#2a2210|#a8e0a0|#f0f0a8|jungle|0|5|3,2,5,0
-victoria|Lake Victoria|Africa|200|#3a9aa0|#10404c|#9ae0f4|#ffe9b8|reeds|0|5|5,3,2,0
-afrcoast|African Coastline|Africa|225|#1f9ab8|#0a3e64|#8ad8ff|#ffe0a0|dunes|1|5|6,2,1,0
-indian|Indian Rivers|Asia|250|#8a7a4a|#3a3018|#ffc88a|#ffeab0|hills|0|5|4,3,4,0
-japan|Japanese Coastline|Asia|280|#2a78b8|#0a2f5e|#ffb8c8|#fff0e0|cliffs|1|5|4,3,3,0
-mekong|Mekong River|Asia|310|#7a6a3a|#2e2812|#a0e0b8|#f8f0b0|jungle|0|5|3,3,4,0
-seasia|Southeast Asian Islands|Asia|340|#18c0c0|#085a78|#8ae8ff|#fff2b8|palms|1|4|5,2,3,0
-himalaya|Himalayan Lakes|Asia|375|#3aa0c8|#0e3c5c|#a8d0f8|#f4f8ff|peaks|0|6|4,3,1,2
-reef|Great Barrier Reef|Oceania|410|#20d0d8|#0870a0|#80e4ff|#fff4c0|palms|1|4|6,3,1,0
-murray|Murray River|Oceania|450|#7a6a3a|#2e2812|#ffd0a0|#fff0c0|dunes|0|5|6,2,2,0
-billabong|Australian Billabongs|Oceania|490|#5a8a4a|#1e3a1a|#ffc890|#fff0b8|reeds|0|5|5,2,3,0
-nzlakes|New Zealand Lakes|Oceania|530|#2a8ab0|#0a3a5a|#a0d0f0|#eef6ff|peaks|0|6|4,4,2,0
-antarctic|Antarctic Waters|Antarctica|580|#5ab0d0|#0a3a5c|#c0d8f0|#f4f8ff|ice|1|6|3,3,0,4
-southern|Southern Ocean|Antarctica|650|#2a5a8a|#08203e|#8aa0c0|#d8e0ec|ice|1|6|2,3,3,2`.split('\n').map(l=>{const a=l.split('|');return{id:a[0],n:a[1],cont:a[2],req:+a[3],w1:a[4],w2:a[5],s1:a[6],s2:a[7],sc:a[8],sea:+a[9],bt:+a[10],wx:a[11].split(',').map(Number)}});
-const LOC=Object.fromEntries(LOCS.map(l=>[l.id,l]));
-const CONTS=[...new Set(LOCS.map(l=>l.cont))];
-</script><script>// str=strength  reel=reel speed  ctl=fish control (less line tension)  cast=casting distance  ease=difficulty reduction
-const RODS=[
-{id:'starter',n:'Starter Rod',price:0,str:2,reel:2,ctl:2,cast:1,ease:0},
-{id:'wooden',n:'Wooden Rod',price:120,str:3,reel:3,ctl:3,cast:2,ease:.3},
-{id:'fibre',n:'Fibreglass Rod',price:450,str:4,reel:4,ctl:4,cast:3,ease:.7},
-{id:'carbon',n:'Carbon Rod',price:1400,str:5.5,reel:5.5,ctl:5.5,cast:4,ease:1.2},
-{id:'pro',n:'Professional Rod',price:3500,str:7,reel:7,ctl:6.5,cast:5,ease:1.8},
-{id:'master',n:'Master Rod',price:9000,str:8.5,reel:8,ctl:8,cast:6,ease:2.5},
-{id:'legendary',n:'Legendary Rod',price:30000,str:10,reel:9,ctl:9,cast:7.5,ease:3.2},
-{id:'mythical',n:'Mythical Rod',price:90000,str:12,reel:11,ctl:11,cast:9,ease:4}];
-const ROD=Object.fromEntries(RODS.map(r=>[r.id,r]));
-const MAX_LV=3;
-function Rod(){const r=ROD[S.rod],l=(S.rods[S.rod]||{}).lv||0,m=1+.08*l;return Object.assign({},r,{str:r.str*m,reel:r.reel*m,ctl:r.ctl*m,lv:l})}
-const upgradeCost=(r,lv)=>Math.round((r.price||60)*.5*(lv+1));
-</script><script>// rm = rarity multipliers on spawn weight, mid = bonus for medium fish (1-30kg), dp = bonus for deep-water fish. No lure guarantees anything.
-const LURES=[
-{id:'worm',n:'Basic Worm',price:0,rm:{common:1.6,uncommon:1.1},d:'Better chance of common fish.'},
-{id:'minnow',n:'Minnow Lure',price:40,rm:{uncommon:1.3},mid:1.7,d:'Better chance of medium-sized fish.'},
-{id:'golden',n:'Golden Lure',price:350,rm:{uncommon:1.2,rare:2,epic:1.5},d:'Increased chance of rare fish.'},
-{id:'deep',n:'Deep Sea Lure',price:1500,rm:{rare:1.3},dp:2.4,d:'Attracts deep-water fish.'},
-{id:'legend',n:'Legendary Lure',price:6000,rm:{epic:1.8,legendary:4},d:'Increased chance of legendary fish.'},
-{id:'myth',n:'Mythical Lure',price:20000,rm:{legendary:2,mythical:5},d:'Helps attract mythical fish.'},
-{id:'secret',n:'Secret Lure',price:60000,rm:{mythical:1.5,secret:8},d:'Special chance of attracting secret fish.'}];
-const LURE=Object.fromEntries(LURES.map(l=>[l.id,l]));
-</script><script>const Save={KEY:'world_fishing_adventures_v1',
- def(){return{v:1,coins:60,loc:'everglades',unlocked:['everglades'],rods:{starter:{lv:0}},rod:'starter',lures:{worm:1},lure:'worm',book:{},inv:[],total:0,ach:{},quests:{},daily:{},clock:.3,settings:{vol:.6,music:true,sfx:true,season:'auto'},stats:{rar:{},sold:0,earned:0,lost:0,snaps:0,time:0,heaviest:0,cont:{}}}},
- merge(a,b){for(const k in b){if(b[k]&&typeof b[k]==='object'&&!Array.isArray(b[k])&&a[k]&&typeof a[k]==='object'&&!Array.isArray(a[k]))this.merge(a[k],b[k]);else a[k]=b[k]}return a},
- has(){try{return!!localStorage.getItem(this.KEY)}catch(e){return false}},
- load(){try{const s=JSON.parse(localStorage.getItem(this.KEY));if(s&&typeof s.coins==='number')return this.merge(this.def(),s)}catch(e){}return this.def()},
- save(){try{localStorage.setItem(this.KEY,JSON.stringify(S))}catch(e){}},
- exportText(){return btoa(unescape(encodeURIComponent(JSON.stringify(S))))},
- download(){const b=new Blob([JSON.stringify(S)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='world-fishing-save.json';a.click()},
- importText(t){try{t=t.trim();const o=JSON.parse(t[0]==='{'?t:decodeURIComponent(escape(atob(t))));if(typeof o.coins!=='number'||!o.rods)throw 0;localStorage.setItem(this.KEY,JSON.stringify(this.merge(this.def(),o)));location.reload()}catch(e){UI.toast('Invalid save data','bad')}},
- reset(){try{localStorage.removeItem(this.KEY)}catch(e){}location.reload()}};
-let S=Save.load();
-</script><script>const ACH=[],A=(id,n,d,t,r)=>ACH.push({id,n,d,t,r}),sp=s=>Object.keys(s.book).length;
-[10,50,100,250,500,1000].forEach(n=>A('c'+n,`Angler ${n}`,`Catch ${n} fish`,s=>s.total>=n,n*2));
-[5,15,30,50,75,100].forEach(n=>A('s'+n,`Collector ${n}`,`Discover ${n} species`,s=>sp(s)>=n,n*10));
-RARITY_ORDER.slice(1).forEach((r,i)=>A('r_'+r,`First ${r}`,`Catch a ${r} fish`,s=>(s.stats.rar[r]||0)>=1,(i+1)*40));
-[500,5000,50000,500000].forEach(n=>A('e'+n,`Earn ${n} coins`,`Earn ${n} coins from fish`,s=>s.stats.earned>=n,n/10));
-A('big','Heavyweight','Catch a fish over 100 kg',s=>s.stats.heaviest>=100,500);
-A('tour','World Traveller','Fish on 4 continents',s=>Object.keys(s.stats.cont).length>=4,300);
-A('allloc','Explorer','Unlock every location',s=>s.unlocked.length>=LOCS.length,2000);
-A('allrod','Gear Head','Own every rod',s=>Object.keys(s.rods).length>=RODS.length,2000);
-A('alllure','Tackle Box','Own every lure',s=>Object.keys(s.lures).length>=LURES.length,1500);
-A('allfish','Master Angler','Discover every fish',s=>sp(s)>=FISH.length,20000);
-const QUESTS=[['q1','First Steps','Catch 5 fish',s=>s.total,5,30],['q2','Seller','Sell 10 fish',s=>s.stats.sold,10,40],['q3','Naturalist','Discover 5 species',sp,5,50],['q4','Better Gear','Own 2 rods',s=>Object.keys(s.rods).length,2,60],['q5','Big One','Catch a fish over 10 kg',s=>s.stats.heaviest>=10?1:0,1,100],['q6','Hunter','Catch 3 rare or better fish',s=>RARITY_ORDER.slice(2).reduce((a,r)=>a+(s.stats.rar[r]||0),0),3,200],['q7','Globetrotter','Unlock 5 locations',s=>s.unlocked.length,5,300],['q8','Collector','Discover 30 species',sp,30,600],['q9','Legend Hunter','Catch a legendary or better fish',s=>RARITY_ORDER.slice(4).reduce((a,r)=>a+(s.stats.rar[r]||0),0),1,1500]];
-const DT=[['Catch #n fish',[8,12,16],()=>true,12],['Catch #n uncommon-or-better fish',[3,5],f=>RARITY_ORDER.indexOf(f.r)>=1,30],['Catch #n rare-or-better fish',[1,2],f=>RARITY_ORDER.indexOf(f.r)>=2,150],['Catch #n fish heavier than 5 kg',[2,3],(f,w)=>w>=5,40],['Catch #n fish at night',[2,4],()=>Env.now().night,40]];
-const Ach={
- today(){const d=new Date().toISOString().slice(0,10);if(S.daily.date!==d){const h=hash(d),t=DT[h%DT.length],n=t[1][h%t[1].length];S.daily={date:d,i:h%DT.length,goal:n,prog:0,done:false}}return S.daily},
- dt(){const d=this.today();return{txt:DT[d.i][0].replace('#n',d.goal),reward:d.goal*DT[d.i][3]}},
- onCatch(f,w){const d=this.today();if(!d.done&&DT[d.i][2](f,w)){d.prog++;if(d.done=d.prog>=d.goal){const r=this.dt().reward;S.coins+=r;UI.toast('Daily challenge complete! +'+r+' 🪙','good')}}
-  if(w>S.stats.heaviest)S.stats.heaviest=w;this.check()},
- check(){for(const a of ACH)if(!S.ach[a.id]&&a.t(S)){S.ach[a.id]=Date.now();S.coins+=a.r;UI.toast(`🏆 ${a.n}: +${a.r} 🪙`,'good')}
-  for(const q of QUESTS)if(!S.quests[q[0]]&&q[3](S)>=q[4]){S.quests[q[0]]=1;S.coins+=q[5];UI.toast(`📜 Quest done: ${q[1]} +${q[5]} 🪙`,'good')}Save.save();UI.hud()},
- stats(){const st=S.stats,d=this.today(),dt=this.dt(),m=Math.floor(st.time/60);
-  UI.open('Stats & Goals',`<div class=grid>
-  <div class=card><h4>Statistics</h4>Total caught: ${S.total}<br>Species: ${sp(S)}/${FISH.length}<br>Coins earned: ${st.earned}<br>Fish sold: ${st.sold}<br>Fish lost: ${st.lost} (snapped: ${st.snaps})<br>Heaviest: ${st.heaviest} kg<br>Play time: ${Math.floor(m/60)}h ${m%60}m<br>Locations: ${S.unlocked.length}/${LOCS.length}</div>
-  <div class=card><h4>By rarity</h4>${RARITY_ORDER.map(r=>`<span style="color:${RARITIES[r].c}">${r}: ${st.rar[r]||0}</span>`).join('<br>')}</div>
-  <div class=card><h4>📅 Daily challenge</h4>${dt.txt}<div class=bar><i style="width:${Math.min(100,d.prog/d.goal*100)}%"></i></div>${d.done?'✅ Complete':d.prog+'/'+d.goal+' — reward '+dt.reward+' 🪙'}</div></div>
-  <h3>Quests</h3><div class=grid>${QUESTS.map(q=>{const p=Math.min(q[4],q[3](S));return`<div class="card ${S.quests[q[0]]?'':''}"><h4>${S.quests[q[0]]?'✅':'📜'} ${q[1]}</h4>${q[2]}<div class=bar><i style="width:${p/q[4]*100}%"></i></div><span class=sm>${p}/${q[4]} — ${q[5]} 🪙</span></div>`}).join('')}</div>
-  <h3>Achievements (${Object.keys(S.ach).length}/${ACH.length})</h3><div class=grid>${ACH.map(a=>`<div class="card ${S.ach[a.id]?'':'lock'}"><h4>${S.ach[a.id]?'🏆':'🔒'} ${a.n}</h4><span class=sm>${a.d} — ${a.r} 🪙</span></div>`).join('')}</div>`)}};
-</script><script>const fishValue=(f,w)=>Math.round(f.v*(.6+.8*(w-f.w[0])/((f.w[1]-f.w[0])||1)));
-const Inv={
- addCatch(f,w,v){const b=S.book[f.id],isNew=!b,rec=!!b&&w>b.best,bb=S.book[f.id]=b||{n:0,best:0};bb.n++;if(w>bb.best)bb.best=w;S.inv.push({id:f.id,w,v});S.total++;S.stats.rar[f.r]=(S.stats.rar[f.r]||0)+1;Ach.onCatch(f,w);Game.checkUnlocks();Save.save();return{isNew,rec}},
- sell(i){const x=S.inv[i];if(!x)return;S.inv.splice(i,1);this.pay(x.v,1);this.show()},
- sellWhere(fn){let t=0,n=0;S.inv=S.inv.filter(x=>{if(fn(x,FISH_BY_ID[x.id])){t+=x.v;n++;return false}return true});if(n)this.pay(t,n);this.show()},
- pay(v,n){S.coins+=v;S.stats.earned+=v;S.stats.sold+=n;Snd.sfx('coin');Ach.check();Save.save()},
- show(){const tot=S.inv.reduce((a,x)=>a+x.v,0);
-  UI.open('Inventory',`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"><span class=chip>🪙 ${S.coins}</span><span class=chip>${S.inv.length} fish worth ${tot} 🪙</span><button class=gold onclick="Inv.sellWhere(()=>true)">Sell all</button><button onclick="Inv.sellWhere((x,f)=>RARITY_ORDER.indexOf(f.r)<2)">Sell common &amp; uncommon</button></div>`+
-  (S.inv.length?S.inv.map((x,i)=>[x,i]).slice(-250).reverse().map(([x,i])=>{const f=FISH_BY_ID[x.id];return`<div class=row><img src="${Art.fishURL(f)}"><div class=g><b style="color:${RARITIES[f.r].c}">${f.n}</b><div class=sm>${f.r} · ${x.w} kg · ${LOC[f.l].n}</div></div><b>${x.v} 🪙</b><button class=gold onclick="Inv.sell(${i})">Sell</button></div>`}).join(''):'<p>Your bag is empty. Go catch something! Coins are earned only by selling fish.</p>'))},
- filt:'all',
- book(){const n=Object.keys(S.book).length,tot=Object.values(S.book).reduce((a,b)=>a+b.n,0);
-  const list=FISH.filter(f=>this.filt==='all'||f.l===this.filt);
-  UI.open('Fish Collection Book',`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"><span class=chip>Discovered ${n}/${FISH.length}</span><span class=chip>Total caught ${tot}</span><select style="width:auto" onchange="Inv.filt=this.value;Inv.book()"><option value=all>All locations</option>${LOCS.map(l=>`<option value=${l.id} ${this.filt===l.id?'selected':''}>${l.n}</option>`).join('')}</select></div><div class="grid book">${list.map(f=>{const b=S.book[f.id];return`<div class=card onclick="Inv.detail('${f.id}')" style="${b?'border-color:'+RARITIES[f.r].c:''}"><img src="${Art.fishURL(f,!b)}"><b>${b?f.n:'???'}</b><span class=sm>${b?f.r+' · caught '+b.n+' · best '+b.best+' kg':LOC[f.l].n}</span></div>`}).join('')}</div>`)},
- detail(id){const f=FISH_BY_ID[id],b=S.book[id],c=RARITIES[f.r].c;
-  UI.modal(`<div style="--c:${c}"><img src="${Art.fishURL(f,!b)}" style="filter:drop-shadow(0 0 12px ${c})"><h2>${b?f.n:'???'}</h2><span class=tag style="background:${c}">${b?f.r.toUpperCase():'UNDISCOVERED'}</span><p>📍 ${LOC[f.l].n} (${LOC[f.l].cont})</p>${b?`<p>${f.desc}</p><p>Weight range: ${f.w[0]}–${f.w[1]} kg<br>Biggest caught: ${b.best} kg · Total caught: ${b.n}<br>Base value: ${f.v} 🪙 · Difficulty: ${f.d.toFixed(1)}/10 · Speed: ${f.s.toFixed(1)}/10</p>`:'<p>Catch this fish to reveal its secrets.</p>'}<button onclick="UI.modal('')">Close</button></div>`)}};
-</script><script>const Meter=(l,v,m)=>`<div class=sm>${l}</div><div class=bar><i style="width:${Math.min(100,v/m*100)}%"></i></div>`;
-const Shop={
- rods(){UI.open('Rod Shop',`<span class=chip>🪙 ${S.coins}</span> <button onclick="Inv.show()">Sell fish</button><p class=sm>Upgrade owned rods (+8% strength, reel and control per level, max ${MAX_LV}).</p><div class=grid>${RODS.map(r=>{const o=S.rods[r.id],cur=S.rod===r.id,lv=o?o.lv:0,uc=upgradeCost(r,lv);
-  return`<div class="card ${cur?'cur':''}"><h4>${r.n}${o&&lv?' +'+lv:''}</h4>${Meter('Strength',r.str,12)}${Meter('Reel speed',r.reel,11)}${Meter('Fish control',r.ctl,11)}${Meter('Casting distance',r.cast,9)}<span class=sm>Difficulty reduction: -${r.ease}</span>`+
-  (o?(cur?'<b>✔ Equipped</b>':`<button class=grn onclick="Shop.equipRod('${r.id}')">Equip</button>`)+(lv<MAX_LV?`<button class=gold onclick="Shop.upRod('${r.id}')" ${S.coins<uc?'disabled':''}>Upgrade ${uc} 🪙</button>`:'<span class=sm>Max level</span>'):`<button class=gold onclick="Shop.buyRod('${r.id}')" ${S.coins<r.price?'disabled':''}>Buy ${r.price} 🪙</button>`)+'</div>'}).join('')}</div>`)},
- buyRod(id){const r=ROD[id];if(S.rods[id]||S.coins<r.price)return;S.coins-=r.price;S.rods[id]={lv:0};S.rod=id;Snd.sfx('coin');Ach.check();this.rods()},
- equipRod(id){S.rod=id;Save.save();UI.hud();this.rods()},
- upRod(id){const o=S.rods[id],c=upgradeCost(ROD[id],o.lv);if(o.lv>=MAX_LV||S.coins<c)return;S.coins-=c;o.lv++;Snd.sfx('coin');Ach.check();this.rods()},
- lures(){UI.open('Lure Shop',`<span class=chip>🪙 ${S.coins}</span><p class=sm>Lures improve your odds but never guarantee a fish. Fish also prefer certain lures.</p><div class=grid>${LURES.map(l=>{const own=S.lures[l.id],cur=S.lure===l.id;
-  return`<div class="card ${cur?'cur':''}"><h4>${l.n}</h4><span class=sm>${l.d}</span><span class=sm>${Object.entries(l.rm).map(([k,v])=>k+' ×'+v).join(', ')}${l.mid?', medium fish ×'+l.mid:''}${l.dp?', deep fish ×'+l.dp:''}</span>`+(own?(cur?'<b>✔ Equipped</b>':`<button class=grn onclick="Shop.equipLure('${l.id}')">Equip</button>`):`<button class=gold onclick="Shop.buyLure('${l.id}')" ${S.coins<l.price?'disabled':''}>Buy ${l.price} 🪙</button>`)+'</div>'}).join('')}</div>`)},
- buyLure(id){const l=LURE[id];if(S.lures[id]||S.coins<l.price)return;S.coins-=l.price;S.lures[id]=1;S.lure=id;Snd.sfx('coin');Ach.check();this.lures()},
- equipLure(id){S.lure=id;Save.save();UI.hud();this.lures()}};
-</script><script>const WY=290,TIP={x:218,y:205};let cv,cx;
-const mix=(a,b,t)=>{const p=h=>h[0]=='#'?[1,3,5].map(i=>parseInt(h.substr(i,2),16)):h.match(/\d+/g).map(Number),A=p(a),B=p(b);return'rgb('+A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join()+')'};
-const Env={wx:'clear',wxT:30,
- now(){const l=.5+.5*Math.sin((S.clock-.25)*6.2832),se=S.settings.season!=='auto'?S.settings.season:['winter','winter','spring','spring','spring','summer','summer','summer','autumn','autumn','autumn','winter'][new Date().getMonth()];return{light:l,night:l<.3,day:l>.45,wx:this.wx,season:se}},
- roll(){const w=LOC[S.loc].wx,N=['clear','cloudy','rain','snow'];let r=Math.random()*w.reduce((a,b)=>a+b),i=0;for(;i<4;i++)if((r-=w[i])<0)break;this.wx=N[Math.min(i,3)];this.wxT=60+Math.random()*120}};
-const rollWeight=f=>+(f.w[0]+(f.w[1]-f.w[0])*Math.pow(Math.random(),2.2)).toFixed(2);
-const fishLen=w=>Math.min(170,26+16*Math.log2(1+w));
-// Chooses which fish bites. Location, time, weather, season, lure and rod all matter.
-function pickFish(locId=S.loc,lureId=S.lure,e=Env.now(),rod=Rod()){
- const lu=LURE[lureId],arr=[];let tot=0;
- for(const f of FISH){if(f.l!==locId)continue;
-  if(f.t==='night'&&!e.night||f.t==='day'&&!e.day||f.wx&&f.wx!==e.wx||f.se&&f.se!==e.season)continue;
-  const avg=(f.w[0]+f.w[1])/2;let w=RARITIES[f.r].w*(lu.rm[f.r]||1);
-  if(f.pref===lu.id)w*=1.5;if(lu.dp&&f.dp)w*=lu.dp;if(lu.mid&&avg>=1&&avg<=30)w*=lu.mid;
-  if(RARITY_ORDER.indexOf(f.r)>=2)w*=1+rod.cast*.04;
-  arr.push([f,w]);tot+=w}
- let r=Math.random()*tot;for(const[f,w]of arr)if((r-=w)<=0)return f;return arr[0][0]}
-const Art={cache:{},
- fishURL(f,sil){const k=f.id+(sil?1:0);if(this.cache[k])return this.cache[k];const c=document.createElement('canvas');c.width=120;c.height=60;this.draw(c.getContext('2d'),60,30,84,f,1,sil,0);return this.cache[k]=c.toDataURL()},
- draw(x,cx_,cy,len,f,dir,sil,t){const h=hash(f.id),v=h%4,a=`hsl(${h%360} 70% 55%)`,b=`hsl(${(h>>3)%360} 65% 35%)`,c=`hsl(${(h>>5)%360} 80% 78%)`,ry=len*[.22,.1,.32,.17][v],w=Math.sin(t*8)*len*.07,S_='#141c30';
-  x.save();x.translate(cx_,cy);x.scale(dir,1);x.fillStyle=sil?S_:b;
-  x.beginPath();x.moveTo(-len*.4,0);x.lineTo(-len*.72,-ry*1.1+w);x.lineTo(-len*.68,ry*1.1+w);x.fill();
-  x.beginPath();x.moveTo(-len*.1,-ry*.8);x.lineTo(len*.05,-ry*1.6);x.lineTo(len*.22,-ry*.8);x.fill();
-  x.fillStyle=sil?S_:a;x.beginPath();x.ellipse(0,0,len/2,ry,0,0,7);x.fill();
-  if(!sil){x.fillStyle=c;x.beginPath();x.ellipse(0,ry*.4,len*.42,ry*.5,0,0,7);x.fill();x.fillStyle=b;for(let i=0;i<3;i++)x.fillRect(-len*.2+i*len*.12,-ry*.8,len*.03,ry*1.1);x.fillStyle='#fff';x.beginPath();x.arc(len*.3,-ry*.2,Math.max(2,ry*.26),0,7);x.fill();x.fillStyle='#000';x.beginPath();x.arc(len*.31,-ry*.2,Math.max(1,ry*.13),0,7);x.fill()}
-  x.restore()}};
-function scene(c,W,L,wy,t){const s=hash(L.id)%97,poly=(col,fn)=>{c.fillStyle=col;c.beginPath();c.moveTo(0,wy);for(let x=0;x<=W+6;x+=6)c.lineTo(x,fn(x));c.lineTo(W,wy);c.fill()},sn=Math.sin;
- switch(L.sc){
- case'peaks':poly('#cfd9ea',x=>wy-70-120*Math.abs(sn(x*.005+s)));poly('#6f87aa',x=>wy-40-70*Math.abs(sn(x*.009+s*2)));break;
- case'hills':case'reeds':poly('#7fb87a',x=>wy-50-30*sn(x*.01+s));poly('#4f9a52',x=>wy-18-18*sn(x*.017+s*2));
-  if(L.sc==='hills'){c.fillStyle='#2f6b34';for(let i=0;i<14;i++){const x=(i*83+s*9)%W;c.beginPath();c.arc(x,wy-38,16+i%3*4,0,7);c.fill()}}
-  else{c.strokeStyle='#b4a64a';c.lineWidth=3;for(let i=0;i<40;i++){const x=(i*37+s*5)%W,hh=30+i%5*8;c.beginPath();c.moveTo(x,wy);c.quadraticCurveTo(x+4*sn(t+i),wy-hh/2,x+8*sn(t*.8+i),wy-hh);c.stroke()}}break;
- case'palms':poly('#f2dca0',x=>wy-14-8*sn(x*.01+s));for(let i=0;i<5;i++){const x=(i*190+s*6)%W+60,hh=70+i%3*20;c.strokeStyle='#7a5a2a';c.lineWidth=6;c.beginPath();c.moveTo(x,wy-10);c.quadraticCurveTo(x+16,wy-hh/2,x+8,wy-hh);c.stroke();c.fillStyle='#2f9a4a';for(let k=0;k<5;k++){c.beginPath();c.ellipse(x+8+(k-2)*14,wy-hh+Math.abs(k-2)*6+sn(t+k)*2,18,5,(k-2)*.4,0,7);c.fill()}}break;
- case'jungle':poly('#1f5a32',x=>wy-75-35*Math.abs(sn(x*.02+s)));poly('#2f7a40',x=>wy-30-20*sn(x*.035+s));break;
- case'cliffs':poly('#8a8478',x=>wy-100-70*(((Math.floor(x/70)*37+s)%5)/5));poly('#6a655c',x=>wy-30-30*(((Math.floor(x/45)*53+s)%4)/4));break;
- case'dunes':poly('#e6c88a',x=>wy-45-30*sn(x*.007+s));poly('#cfa966',x=>wy-15-12*sn(x*.013+s));break;
- case'ice':c.fillStyle='#e8f4ff';for(let i=0;i<6;i++){const x=(i*190+s*4)%W,hh=40+(i*37+s)%60;c.beginPath();c.moveTo(x-50,wy);c.lineTo(x-20,wy-hh);c.lineTo(x+5,wy-hh*.6);c.lineTo(x+30,wy-hh*1.2);c.lineTo(x+70,wy);c.fill()}poly('#bcd6ea',x=>wy-8-5*sn(x*.02+s))}}
-const Fishing={st:'idle',t:0,clk:0,hold:false,lock:0,fx:[],rip:[],drops:[],amb:[],bx:TIP.x,by:TIP.y,tx:500,
- reset(){this.st='idle';this.t=0;this.hold=false;this.f=null;this.app=null;this.bx=TIP.x;this.by=TIP.y},
- cancel(){if(this.st!=='result')this.reset()},
- rebuild(){this.amb=[];const fs=FISH.filter(f=>f.l===S.loc&&RARITY_ORDER.indexOf(f.r)<3);if(!fs.length)return;for(let i=0;i<9;i++){const f=fs[i%fs.length],a=(f.w[0]+f.w[1])/2;this.amb.push({f,len:Math.min(70,fishLen(a)*.8),x:Math.random()*900,y:WY+70+Math.random()*180,v:(15+Math.random()*25)*(i%2?1:-1),ph:Math.random()*9})}},
- press(){Snd.init();if(UI.isOpen())return;if(this.st==='result'){if(this.lock<=0)UI.closeCatch();return}
-  this.hold=true;if(this.st==='idle')this.cast();else if(this.st==='wait'){UI.toast('Reeled in too early!');this.reset()}else if(this.st==='bite')this.hook()},
- release(){this.hold=false},
- cast(){const W=cv.width,r=Rod();this.tx=Math.min(W-60,250+(W-330)*(.3+.07*r.cast));this.st='cast';this.t=0;this.f=pickFish();this.w=rollWeight(this.f);Snd.sfx('cast')},
- hook(){this.st='battle';this.t=0;this.prog=30;this.ten=0;this.thr=0;this.thrT=0;this.nextThr=2+Math.random()*2;Snd.sfx('hook')},
- lose(m){S.stats.lost++;UI.toast(m,'bad');Snd.sfx('lose');this.reset()},
- win(){const f=this.f,w=this.w,v=fishValue(f,w),ri=RARITY_ORDER.indexOf(f.r),res=Inv.addCatch(f,w,v);this.st='result';this.lock=.8;this.hold=false;Snd.sfx(ri>=4?'legend':'catch');
-  if(ri>=3){const W=cv.width;for(let i=0;i<40+ri*25;i++){const a=Math.random()*6.28,s=80+Math.random()*260;this.fx.push({x:W/2,y:270,vx:Math.cos(a)*s,vy:Math.sin(a)*s-60,l:1.5,c:RARITIES[f.r].c})}}
-  UI.catchCard(f,w,v,res)},
- update(dt){this.clk+=dt;S.clock=(S.clock+dt/360)%1;S.stats.time+=dt;this.lock-=dt;Env.wxT-=dt;if(Env.wxT<=0)Env.roll();
-  const W=cv.width,L=LOC[S.loc],wx=Env.wx;
-  if(wx==='rain'||wx==='snow'){while(this.drops.length<(wx==='rain'?160:90))this.drops.push({x:Math.random()*W,y:Math.random()*WY*1.0,s:Math.random()})}else this.drops.length=0;
-  for(const d of this.drops){d.y+=(wx==='rain'?600:70)*dt*(.7+d.s*.5);d.x+=(wx==='rain'?-60:Math.sin(this.clk+d.s*9)*20)*dt;if(d.y>WY){d.y=0;d.x=Math.random()*W}}
-  for(const p of this.fx){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=200*dt;p.l-=dt}this.fx=this.fx.filter(p=>p.l>0);
-  this.rip=this.rip.filter(r=>(r.t+=dt)<1.2);
-  for(const a of this.amb){a.x+=a.v*dt;if(a.x>W+100)a.x=-100;if(a.x<-100)a.x=W+100}
-  const rod=Rod();
-  if(this.st==='cast'){const p=Math.min(1,this.t/.6);this.bx=TIP.x+(this.tx-TIP.x)*p;this.by=TIP.y+(WY-TIP.y)*p-Math.sin(p*3.14)*110;
-   if(p>=1){this.st='wait';this.t=0;this.by=WY;this.rip.push({x:this.bx,t:0});Snd.sfx('splash');this.biteAt=L.bt*(.5+Math.random())*(wx==='rain'?.8:1);const side=this.tx>W/2?-1:1;this.app={x:this.tx+side*(240+Math.random()*100),y:WY+70+Math.random()*120,x0:0};this.app.x0=this.app.x}}
-  else if(this.st==='wait'){this.by=WY+Math.sin(this.clk*3)*2;const p=Math.min(1,this.t/this.biteAt),a=this.app;a.x=a.x0+(this.tx-a.x0)*p;a.y+=(WY+50-a.y)*dt*.8;
-   if(p>=1){this.st='bite';this.t=0;this.win_=1.3+rod.ctl*.04-this.f.d*.04;this.rip.push({x:this.bx,t:0});Snd.sfx('bite')}}
-  else if(this.st==='bite'){this.by=WY+8+Math.sin(this.clk*30)*5;if(this.t>this.win_)this.lose('It got away... be quicker!')}
-  else if(this.st==='battle'){const f=this.f,Dn=Math.max(.5,f.d+Math.log2(1+this.w)*.1-rod.ease),hold=this.hold;
-   this.nextThr-=dt;if(this.thr===0&&this.nextThr<=0){this.thr=1;this.thrT=0}this.thrT+=dt;
-   if(this.thr===1&&this.thrT>.5){this.thr=2;this.thrT=0}else if(this.thr===2&&this.thrT>1+Dn*.05){this.thr=0;this.nextThr=(2.5+Math.random()*2)/(.6+Dn*.1)}
-   const th=this.thr===2;
-   if(hold){this.prog+=dt*(9+2*rod.reel)*(th?.25:1)*rod.str/(rod.str+Dn*.5);this.ten+=dt*(8+Dn*2.5)*(th?2.6:.5)/(1+rod.ctl*.25)}else this.ten=Math.max(0,this.ten-dt*25);
-   this.prog-=dt*(1+Dn*.8);
-   const p=this.prog/100;this.fx_=this.tx+(TIP.x+90-this.tx)*p+Math.sin(this.clk*f.s)*30*(1-p)+(th?(Math.random()-.5)*14:0);this.fy_=WY+50+(1-p)*140+(th?(Math.random()-.5)*10:0)+Math.sin(this.clk*2)*8;this.bx=this.fx_;this.by=WY+Math.sin(this.clk*6)*3;
-   if(this.ten>=100){S.stats.snaps++;this.lose('Line snapped! Release SPACE when it thrashes.')}else if(this.prog<=0)this.lose('The fish escaped!');else if(this.prog>=100)this.win()}},
- render(){const c=cx,W=cv.width,H=cv.height,L=LOC[S.loc],e=Env.now(),lt=e.light,t=this.clk,wd=e.wx==='clear'?0:.45,sk=(a,n)=>mix(mix(a,'#8a97a6',wd),n,Math.pow(1-lt,.8));
-  let g=c.createLinearGradient(0,0,0,WY);g.addColorStop(0,sk(L.s1,'#070b24'));g.addColorStop(1,sk(L.s2,'#26356e'));c.fillStyle=g;c.fillRect(0,0,W,WY);
-  if(lt<.55){c.fillStyle='#fff';c.globalAlpha=Math.min(1,(.55-lt)*3);for(let i=0;i<70;i++)c.fillRect((i*131)%W,(i*53)%(WY-80),1.5,1.5);c.globalAlpha=1}
-  let p=(S.clock-.2)/.6;if(p>0&&p<1){c.fillStyle='#fff3a0';c.beginPath();c.arc(W*p,WY-50-Math.sin(p*3.14)*200,26,0,7);c.fill()}
-  p=((S.clock+.3)%1)/.6;if(p<1){c.fillStyle='#e8eeff';c.beginPath();c.arc(W*p,WY-50-Math.sin(p*3.14)*200,20,0,7);c.fill()}
-  c.fillStyle=wd?'#9aa5b2':'#fff';c.globalAlpha=.8;for(let i=0;i<(wd?7:3);i++){const x=((i*230+t*(6+i*2))%(W+300))-150,y=40+i*26;c.beginPath();c.ellipse(x,y,70,16,0,0,7);c.ellipse(x+40,y-8,40,14,0,0,7);c.fill()}c.globalAlpha=1;
-  scene(c,W,L,WY,t);
-  g=c.createLinearGradient(0,WY,0,H);g.addColorStop(0,L.w1);g.addColorStop(1,L.w2);c.fillStyle=g;c.beginPath();c.moveTo(0,H);c.lineTo(0,WY);for(let x=0;x<=W+8;x+=8)c.lineTo(x,WY+Math.sin(x*.03+t*2)*3+Math.sin(x*.011+t)*2);c.lineTo(W,H);c.fill();
-  c.fillStyle='#fff';c.globalAlpha=.06;for(let i=0;i<4;i++){const x=(i*260+t*10)%W;c.beginPath();c.moveTo(x,WY);c.lineTo(x+60,WY);c.lineTo(x+160,H);c.lineTo(x+60,H);c.fill()}c.globalAlpha=1;
-  c.fillStyle='#ffffff55';for(let i=0;i<14;i++){const y=H-((t*22+i*57)%(H-WY));c.beginPath();c.arc((i*97)%W+Math.sin(t+i)*6,y,2+i%3,0,7);c.fill()}
-  for(const a of this.amb){c.globalAlpha=.55;Art.draw(c,a.x,a.y+Math.sin(t+a.ph)*6,a.len,a.f,a.v>0?1:-1,false,t+a.ph);c.globalAlpha=1}
-  const a=this.app;if(this.st==='wait'&&a){c.globalAlpha=.8;Art.draw(c,a.x,a.y,fishLen(this.w)*.9,this.f,a.x<this.tx?1:-1,true,t);c.globalAlpha=1}
-  if(this.st==='bite'||this.st==='battle'){const x=this.st==='bite'?this.tx:this.fx_,y=this.st==='bite'?WY+45:this.fy_;Art.draw(c,x,y,fishLen(this.w)*.9,this.f,1,this.st==='bite',t*(this.thr===2?3:1))}
-  c.strokeStyle='#ffffff90';c.lineWidth=2;for(const r of this.rip){c.globalAlpha=1-r.t/1.2;c.beginPath();c.ellipse(r.x,WY+2,r.t*40,r.t*8,0,0,7);c.stroke()}c.globalAlpha=1;
-  // dock, fisherman, rod
-  c.fillStyle='#6b4a2a';c.fillRect(0,WY-10,175,12);c.fillStyle='#4a3119';for(let x=20;x<175;x+=50)c.fillRect(x,WY,8,70);
-  c.strokeStyle='#e8c39a';c.lineWidth=8;c.beginPath();c.moveTo(105,WY-14);c.lineTo(105,WY-56);c.stroke();c.fillStyle='#f2c9a0';c.beginPath();c.arc(105,WY-68,13,0,7);c.fill();c.fillStyle='#d84a3a';c.fillRect(90,WY-84,30,8);
-  const ri=RODS.findIndex(r=>r.id===S.rod),rc=`hsl(${ri*38+20} 70% 55%)`;c.strokeStyle=rc;c.lineWidth=4;c.beginPath();c.moveTo(112,WY-44);c.quadraticCurveTo(160,WY-100,TIP.x,TIP.y);c.stroke();
-  if(this.st!=='idle'){const tens=this.st==='battle'?this.ten/100:0;c.strokeStyle=tens>.7?'#ff6a6a':'#f4f4f4';c.lineWidth=1.5;c.beginPath();c.moveTo(TIP.x,TIP.y);if(this.st==='battle')c.lineTo(this.bx,this.by);else c.quadraticCurveTo((TIP.x+this.bx)/2,Math.max(TIP.y,this.by)+(this.st==='cast'?-20:40),this.bx,this.by);c.stroke();
-   c.fillStyle='#fff';c.beginPath();c.arc(this.bx,this.by-3,6,0,7);c.fill();c.fillStyle='#e03030';c.beginPath();c.arc(this.bx,this.by-5,6,3.14,6.28);c.fill()}
-  if(this.st==='bite'){c.fillStyle='#ff3030';c.font='bold 80px sans-serif';c.textAlign='center';c.fillText('!',this.bx,WY-30-Math.abs(Math.sin(t*12))*20);c.fillStyle='#ffe14d';c.font='bold 30px sans-serif';c.fillText('BITE! PRESS SPACE!',W/2,WY-150)}
-  // weather
-  if(this.drops.length){c.strokeStyle='#cfe4ff';c.fillStyle='#fff';c.lineWidth=1;for(const d of this.drops){if(e.wx==='rain'){c.beginPath();c.moveTo(d.x,d.y);c.lineTo(d.x-3,d.y+12);c.stroke()}else c.fillRect(d.x,d.y,3,3)}}
-  // night tint
-  c.fillStyle=`rgba(6,10,45,${(1-lt)*.5+(wd?.08:0)})`;c.fillRect(0,0,W,H);
-  for(const q of this.fx){c.globalAlpha=Math.min(1,q.l);c.fillStyle=q.c;c.fillRect(q.x,q.y,6,6)}c.globalAlpha=1;
-  if(this.st==='battle'){const bw=Math.min(320,W-40),x=W/2-bw/2,y=H-92,th=this.thr===2;
-   c.fillStyle='#0008';c.fillRect(x-8,y-26,bw+16,76);c.fillStyle='#fff';c.font='bold 12px sans-serif';c.textAlign='left';c.fillText('DISTANCE',x,y-12);c.fillText('TENSION',x,y+22);
-   c.fillStyle='#fff3';c.fillRect(x,y-8,bw,12);c.fillRect(x,y+26,bw,12);c.fillStyle='#4ad0ff';c.fillRect(x,y-8,bw*this.prog/100,12);const k=this.ten/100;c.fillStyle=k>.75?'#ff4040':k>.45?'#ffc83d':'#4cd964';c.fillRect(x,y+26,bw*k,12);
-   if(this.thr){c.fillStyle=th?'#ff4040':'#ffc83d';c.font='bold 26px sans-serif';c.textAlign='center';c.fillText(th?'⚠ THRASHING — RELEASE!':'⚠ Fish is about to thrash...',W/2,H-130)}}
-  c.textAlign='left'},
- hint(){return{idle:'Press SPACE (or tap FISH) to cast',cast:'Casting...',wait:'Waiting for a bite... (SPACE reels in early)',bite:'BITE! Press SPACE now!',battle:'HOLD SPACE to reel · RELEASE when tension is high or the fish thrashes',result:'Press SPACE to continue'}[this.st]}};
-</script><script>const $=id=>document.getElementById(id);
-const UI={
- isOpen(){return!!$('ov').firstChild||!!$('md').firstChild},
- open(t,h){$('ov').innerHTML=`<div class=panel><div class=ph><h2>${t}</h2><button class=red onclick="UI.close()">✕ Close</button></div><div class=pb>${h}</div></div>`},
- close(){$('ov').innerHTML='';$('md').innerHTML=''},
- modal(h){$('md').innerHTML=h?`<div class=modal>${h}</div>`:''},
- toast(m,c){const d=document.createElement('div');d.className='toast '+(c||'');d.textContent=m;$('toasts').appendChild(d);setTimeout(()=>d.remove(),3500)},
- hud(){const l=LOC[S.loc],e=Env.now();$('stat').innerHTML=`<span class=chip>🪙 ${S.coins}</span><span class=chip>📍 ${l.n}</span><span class=chip>${e.night?'🌙':e.day?'☀️':'🌅'} ${{clear:'Clear',cloudy:'Cloudy',rain:'Rain',snow:'Snow'}[e.wx]} · ${e.season}</span><span class=chip>🎣 ${ROD[S.rod].n} · ${LURE[S.lure].n}</span>`},
- catchCard(f,w,v,r){const c=RARITIES[f.r].c,big=RARITY_ORDER.indexOf(f.r)>=4;
-  $('md').innerHTML=`<div class="modal ${big?'legend':''}" style="--c:${c}">${big?`<h3 style="color:${c};margin:0">✨ ${f.r.toUpperCase()} CATCH! ✨</h3>`:''}<img src="${Art.fishURL(f)}"><h2>${f.n}</h2><span class=tag style="background:${c}">${f.r.toUpperCase()}</span><p><b>${w} kg</b> · worth <b>${v} 🪙</b></p>${r.isNew?'<p class=tag style="background:#ffc83d">🆕 NEW SPECIES!</p>':''}${r.rec?'<p class=tag style="background:#ff7ad9">🏅 NEW PERSONAL RECORD!</p>':''}<p class=sm>${LOC[f.l].n}</p><button class=grn onclick="UI.closeCatch()">Keep fishing</button> <button onclick="UI.closeCatch();Inv.show()">Bag</button></div>`},
- closeCatch(){$('md').innerHTML='';Fishing.reset();UI.hud()},
- nav(fn){if(UI.isOpen()&&!$('ov').firstChild)return;if(Fishing.st==='result')UI.closeCatch();Fishing.cancel();fn()}};
-const Snd={c:null,tm:null,i:0,init(){if(this.c){if(this.c.state==='suspended')this.c.resume();return}try{this.c=new(window.AudioContext||window.webkitAudioContext)();this.music()}catch(e){}},
- tone(f,d,ty,v,m,at=0){if(!this.c||(m?!S.settings.music:!S.settings.sfx))return;const o=this.c.createOscillator(),g=this.c.createGain(),n=this.c.currentTime+at;o.type=ty;o.frequency.value=f;g.gain.setValueAtTime(0,n);g.gain.linearRampToValueAtTime(v*S.settings.vol,n+.02);g.gain.exponentialRampToValueAtTime(.0001,n+d);o.connect(g);g.connect(this.c.destination);o.start(n);o.stop(n+d+.05)},
- sfx(k){const T=(f,d,t,v,a)=>this.tone(f,d,t||'sine',v||.3,0,a||0),D={cast:()=>{T(500,.15,'triangle');T(300,.2,'triangle',.3,.1)},splash:()=>T(180,.2,'sawtooth',.1),bite:()=>[880,1100,880,1100].forEach((f,i)=>T(f,.12,'square',.2,i*.1)),hook:()=>T(300,.2,'sawtooth',.2),lose:()=>{T(220,.3,'sawtooth',.2);T(150,.4,'sawtooth',.2,.2)},coin:()=>{T(900,.1,'square',.2);T(1300,.2,'square',.2,.1)},catch:()=>[523,659,784].forEach((f,i)=>T(f,.25,'triangle',.3,i*.1)),legend:()=>[523,659,784,1047,1319,1568].forEach((f,i)=>T(f,.5,'triangle',.3,i*.12))};if(D[k])D[k]()},
- music(){clearInterval(this.tm);if(!this.c)return;const li=LOCS.findIndex(l=>l.id===S.loc),ci=CONTS.indexOf(LOC[S.loc].cont),sc=[[0,2,4,7,9],[0,3,5,7,10],[0,2,3,7,8],[0,2,5,7,9],[0,1,5,7,8],[0,2,4,6,9],[0,4,5,7,11]][ci%7],root=110*Math.pow(2,(li*3%12)/12),ty=['sine','triangle'][ci%2];let d=0;
-  this.tm=setInterval(()=>{d=Math.max(0,Math.min(9,d+Math.floor(Math.random()*5)-2));const o=Math.floor(d/5);this.tone(root*2*Math.pow(2,(sc[d%5]+12*o)/12),.9,ty,.07,1);if(this.i++%4===0)this.tone(root/2*Math.pow(2,sc[(this.i>>2)%5]/12),1.6,'sine',.09,1)},430+li%5*70)}};
-const Game={
- init(){cv=$('c');cx=cv.getContext('2d');buildFish();
-  if(!LOC[S.loc])S.loc='everglades';if(!S.unlocked.includes(S.loc))S.unlocked.push(S.loc);if(!S.rods[S.rod])S.rod='starter';if(!S.lures[S.lure])S.lure='worm';
-  S.stats.cont[LOC[S.loc].cont]=1;
-  const rs=()=>{cv.width=Math.max(540,Math.min(1200,Math.round(innerWidth/innerHeight*540)));cv.height=540;Fishing.rebuild()};addEventListener('resize',rs);rs();
-  $('nav').innerHTML=[['🗺️ Map',()=>Game.map()],['🎣 Rods',()=>Shop.rods()],['🪱 Lures',()=>Shop.lures()],['🎒 Bag',()=>Inv.show()],['📖 Book',()=>Inv.book()],['📊 Goals',()=>Ach.stats()],['⚙️',()=>Game.settings()],['☰',()=>Game.menu()]].map((b,i)=>`<button class=nb data-i=${i}>${b[0]}</button>`).join('');
-  const fns=[()=>Game.map(),()=>Shop.rods(),()=>Shop.lures(),()=>Inv.show(),()=>Inv.book(),()=>Ach.stats(),()=>Game.settings(),()=>Game.menu()];
-  $('nav').onclick=e=>{const b=e.target.closest('button');if(b)UI.nav(fns[b.dataset.i])};
-  addEventListener('keydown',e=>{if(e.code==='Space'){if($('ov').firstChild&&!$('md').firstChild)return;e.preventDefault();if(!e.repeat){document.activeElement&&document.activeElement.blur();Fishing.press()}}});
-  addEventListener('keyup',e=>{if(e.code==='Space')Fishing.release()});
-  const fb=$('fishBtn');fb.addEventListener('pointerdown',e=>{e.preventDefault();fb.classList.add('on');Fishing.press()});['pointerup','pointercancel','pointerleave'].forEach(n=>fb.addEventListener(n,()=>{fb.classList.remove('on');Fishing.release()}));
-  cv.addEventListener('pointerdown',()=>Fishing.press());cv.addEventListener('pointerup',()=>Fishing.release());
-  Env.roll();Ach.today();this.checkUnlocks(true);UI.hud();Fishing.reset();Fishing.rebuild();
-  let last=performance.now();const loop=n=>{const dt=Math.min(.05,(n-last)/1000);last=n;if(!UI.isOpen()||Fishing.st==='idle')Fishing.update(dt);Fishing.render();$('hint').textContent=Fishing.hint();requestAnimationFrame(loop)};requestAnimationFrame(loop);
-  setInterval(()=>{Save.save();UI.hud()},10000);addEventListener('beforeunload',()=>Save.save());document.addEventListener('visibilitychange',()=>{if(document.hidden)Save.save()});
-  this.menu(true)},
- checkUnlocks(q){for(const l of LOCS)if(S.total>=l.req&&!S.unlocked.includes(l.id)){S.unlocked.push(l.id);if(!q)UI.toast('🌍 New location unlocked: '+l.n,'good')}},
- map(){UI.open('World Map',CONTS.map(ct=>`<h3>${{'North America':'🌎','South America':'🌎',Europe:'🌍',Africa:'🌍',Asia:'🌏',Oceania:'🌏',Antarctica:'🧊'}[ct]} ${ct}</h3><div class=grid>${LOCS.filter(l=>l.cont===ct).map(l=>{const u=S.unlocked.includes(l.id),fs=FISH.filter(f=>f.l===l.id),d=fs.filter(f=>S.book[f.id]).length;
-  return`<div class="card ${u?'':'lock'} ${S.loc===l.id?'cur':''}" style="background:linear-gradient(135deg,${l.s1}55,${l.w1}88)"><h4>${l.n}</h4><span class=sm>${l.sea?'Sea':'Freshwater'} · ${fs.length} species · ${d} found</span>${u?(S.loc===l.id?'<b>📍 You are here</b>':`<button class=grn onclick="Game.travel('${l.id}')">Travel</button>`):`<span class=sm>🔒 Catch ${l.req} fish in total (${S.total}/${l.req})</span>`}</div>`}).join('')}</div>`).join(''))},
- travel(id){if(!S.unlocked.includes(id))return;S.loc=id;S.stats.cont[LOC[id].cont]=1;Env.roll();Fishing.reset();Fishing.rebuild();Snd.music();UI.close();UI.hud();Ach.check();Save.save()},
- settings(){const s=S.settings;UI.open('Settings',`<div class=grid><div class=card><h4>Audio</h4>Volume<input type=range min=0 max=1 step=.05 value=${s.vol} oninput="S.settings.vol=+this.value;Save.save()"><label><input type=checkbox ${s.music?'checked':''} onchange="S.settings.music=this.checked;Save.save()"> Music</label><label><input type=checkbox ${s.sfx?'checked':''} onchange="S.settings.sfx=this.checked;Save.save()"> Sound effects</label></div>
-  <div class=card><h4>Season</h4><select onchange="S.settings.season=this.value;Save.save();UI.hud()">${['auto','spring','summer','autumn','winter'].map(x=>`<option ${s.season===x?'selected':''}>${x}</option>`).join('')}</select><span class=sm>Auto uses the real calendar (northern hemisphere).</span></div>
-  <div class=card><h4>Back up / restore</h4><button onclick="Save.download()">⬇ Download save file</button><textarea id=sv placeholder="Paste save code or JSON here to import"></textarea><button onclick="$('sv').value=Save.exportText()">Show save code</button><button class=grn onclick="Save.importText($('sv').value)">⬆ Import pasted save</button><input type=file accept=".json" onchange="const r=new FileReader();r.onload=()=>Save.importText(r.result);r.readAsText(this.files[0])"></div>
-  <div class=card><h4>Danger zone</h4><button class=red onclick="confirm('Erase ALL progress?')&&Save.reset()">Erase save</button></div></div>`)},
- menu(first){UI.open('World Fishing Adventures',`<div class=title><h1>World Fishing Adventures</h1><p>Travel the world · hook rare fish · complete the collection</p><button class=gold onclick="Snd.init();UI.close()">${Save.has()||S.total?'▶ Continue':'▶ Play'}</button><button onclick="Game.help()">How to play</button><button onclick="Game.settings()">Settings</button><button class=red onclick="confirm('Start a new game and erase progress?')&&Save.reset()">New game</button></div>`)},
- help(){UI.open('How to play',`<p><b>SPACE</b> (or the big 🎣 FISH button / tap) does everything:</p><p>1. Press to <b>cast</b>. 2. Wait for the <b>!</b> bite alert. 3. Press <b>immediately</b> to hook. 4. <b>Hold</b> to reel in; <b>release</b> when the tension bar turns red or the fish thrashes. 5. Sell fish in the 🎒 Bag, buy better rods &amp; lures, unlock new places by catching fish. Rare fish only bite at the right place, time, weather and season!</p>`)}};
-window.addEventListener('load',()=>Game.init());
-</script>
-</body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>World Fishing Adventures</title>
+  <style>
+    :root {
+      --bg: #071426;
+      --panel: rgba(12, 23, 39, 0.88);
+      --panel-2: rgba(20, 39, 64, 0.95);
+      --line: rgba(110, 190, 255, 0.9);
+      --gold: #f6c861;
+      --green: #4fe07a;
+      --red: #ff5f6d;
+      --text: #edf6ff;
+      --muted: #a4bfdc;
+      --shadow: rgba(0, 0, 0, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      user-select: none;
+    }
+
+    body {
+      background: radial-gradient(circle at top, #153d66 0%, var(--bg) 45%, #040c18 100%);
+    }
+
+    #game {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      display: block;
+      touch-action: none;
+      background: linear-gradient(#0a1a2d, #081420);
+    }
+
+    #hud {
+      position: fixed;
+      top: 10px; left: 10px; right: 10px;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    #stats, #nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      pointer-events: auto;
+    }
+
+    .chip, .button, .card, .panel, .badge {
+      border: 1px solid rgba(255,255,255,0.14);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+    }
+
+    .chip {
+      background: rgba(11, 26, 52, 0.8);
+      border-radius: 10px;
+      padding: 7px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .button {
+      appearance: none;
+      border: 0;
+      border-radius: 10px;
+      background: linear-gradient(#2c86ff, #1a5abb);
+      color: white;
+      padding: 8px 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .button:hover { filter: brightness(1.12); }
+    .button.primary { background: linear-gradient(#ffbd4a, #d98b00); color: #2d1d00; }
+    .button.success { background: linear-gradient(#53d77a, #1d8247); }
+    .button.danger { background: linear-gradient(#ff6868, #b52d2d); }
+    .button.gold { background: linear-gradient(#ffd16c, #d79b00); color: #3c2600; }
+    .button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    #fishBtn {
+      position: fixed;
+      right: 16px;
+      bottom: 18px;
+      width: 112px;
+      height: 112px;
+      border-radius: 50%;
+      border: 0;
+      font-size: 18px;
+      font-weight: 900;
+      line-height: 1.1;
+      background: radial-gradient(circle at 35% 30%, #ffca7a, #e9561a 55%, #b93d15 100%);
+      color: white;
+      box-shadow: 0 7px 0 #7e350d, 0 14px 32px rgba(0,0,0,0.32);
+      cursor: pointer;
+      z-index: 20;
+    }
+    #fishBtn:active, #fishBtn.on { transform: translateY(4px); box-shadow: 0 3px 0 #7e350d; }
+
+    #hint {
+      position: fixed;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(10, 25, 46, 0.9);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: white;
+      border-radius: 999px;
+      padding: 8px 16px;
+      font-weight: 700;
+      font-size: 14px;
+      z-index: 12;
+      max-width: 72vw;
+      text-align: center;
+    }
+
+    #overlay, #modal {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 30;
+    }
+
+    #overlay.active, #modal.active {
+      pointer-events: auto;
+      background: rgba(3, 8, 18, 0.52);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+
+    .panel {
+      width: min(1040px, 100%);
+      max-height: 92vh;
+      background: linear-gradient(180deg, var(--panel-2), rgba(8, 17, 30, 0.98));
+      border-radius: 18px;
+      border: 2px solid rgba(104, 167, 255, 0.55);
+      overflow: hidden;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.02);
+    }
+
+    .panel-header h2 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    .panel-body {
+      padding: 14px;
+      overflow: auto;
+      max-height: calc(92vh - 64px);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 12px;
+    }
+
+    .card {
+      background: rgba(11, 24, 40, 0.9);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      min-height: 120px;
+    }
+
+    .card.locked {
+      opacity: 0.56;
+      filter: grayscale(0.2);
+    }
+
+    .card.selected {
+      border-color: rgba(247, 197, 93, 0.9);
+      box-shadow: 0 0 0 1px rgba(247,197,93,.35), 0 8px 28px rgba(247,197,93,.15);
+    }
+
+    .card h3, .card h4 { margin: 0; }
+    .muted { color: var(--muted); font-size: 12px; }
+    .tiny { font-size: 12px; }
+
+    .bar {
+      position: relative;
+      height: 9px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .bar > i {
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #65c8ff, #4dffb5);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.07);
+      font-weight: 700;
+      font-size: 12px;
+    }
+
+    .modal-box {
+      width: min(500px, 100%);
+      background: linear-gradient(180deg, #1a325c, #0d1c35);
+      border-radius: 18px;
+      border: 3px solid rgba(120, 180, 255, 0.7);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+      padding: 18px;
+      text-align: center;
+    }
+
+    .modal-box img {
+      width: 220px;
+      height: 110px;
+      object-fit: contain;
+      margin-bottom: 8px;
+      filter: drop-shadow(0 0 14px rgba(255,255,255,0.24));
+    }
+
+    .modal-box h2 { margin: 0 0 8px; }
+    .tag {
+      display: inline-block;
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-weight: 800;
+      color: #0b162a;
+      margin: 5px 0 8px;
+    }
+
+    .legend {
+      animation: glow 1.3s ease-in-out infinite alternate;
+    }
+
+    @keyframes glow {
+      from { box-shadow: 0 0 8px rgba(255,196,52,0.8), 0 0 18px rgba(255,196,52,0.5); }
+      to { box-shadow: 0 0 18px rgba(255,196,52,0.85), 0 0 30px rgba(255,196,52,0.55); }
+    }
+
+    #toastBox {
+      position: fixed;
+      inset: 48px 0 auto 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      pointer-events: none;
+      z-index: 40;
+    }
+
+    .toast {
+      background: rgba(11, 26, 52, 0.9);
+      border: 2px solid rgba(98, 177, 255, 0.9);
+      color: white;
+      padding: 8px 14px;
+      border-radius: 12px;
+      font-weight: 800;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.25);
+      animation: pop 0.3s ease;
+    }
+    .toast.good { border-color: rgba(93, 255, 155, 0.9); }
+    .toast.bad { border-color: rgba(255, 101, 112, 0.9); }
+    @keyframes pop { from { opacity: 0; transform: translateY(-8px) scale(.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+    @media (max-width: 760px) {
+      #fishBtn { width: 100px; height: 100px; }
+      .chip { font-size: 11px; padding: 6px 8px; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="game"></canvas>
+  <div id="hud">
+    <div id="stats"></div>
+    <div id="nav"></div>
+  </div>
+  <div id="hint"></div>
+  <button id="fishBtn">🎣<br>FISH</button>
+  <div id="overlay"></div>
+  <div id="modal"></div>
+  <div id="toastBox"></div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const clamp = (n, a, b) => Math.min(Math.max(n, a), b);
+    const rnd = (a, b) => a + Math.random() * (b - a);
+    const choose = (arr) => arr[Math.floor(Math.random() * arr.length)];
+    const hash = (s) => { let h = 2166136261; for (let i = 0; i < s.length; i++) h = (h ^ s.charCodeAt(i)) * 16777619 >>> 0; return h; };
+
+    const RARITIES = {
+      common: {color: '#b7bcc3', weight: 62, base: 10, difficulty: 1.5},
+      uncommon: {color: '#53dc73', weight: 26, base: 22, difficulty: 2.2},
+      rare: {color: '#5ca8ff', weight: 10, base: 72, difficulty: 3.2},
+      epic: {color: '#b667ff', weight: 4.2, base: 200, difficulty: 4.4},
+      legendary: {color: '#ffb54a', weight: 1.3, base: 460, difficulty: 5.4},
+      mythical: {color: '#ff78cc', weight: 0.7, base: 900, difficulty: 6.4},
+      secret: {color: '#ffe66d', weight: 0.3, base: 1800, difficulty: 7.0}
+    };
+    const RARITY_ORDER = Object.keys(RARITIES);
+
+    const FISH_RAW = [];
+    const addFish = (name, location, rarity, minKg, maxKg, options = {}) => {
+      FISH_RAW.push({ name, location, rarity, minKg, maxKg, ...options });
+    };
+
+    function buildFish() {
+      return FISH_RAW.map((raw) => {
+        const id = `${raw.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}_${raw.location}`;
+        const avg = (raw.minKg + raw.maxKg) / 2;
+        const baseValue = (raw.value ?? ((RARITIES[raw.rarity]?.base || 20) * (1 + Math.sqrt(avg) / 5)));
+        const diff = raw.difficulty ?? Math.min(10, (RARITIES[raw.rarity]?.difficulty || 2) + (raw.maxKg > 30 ? 1.2 : 0));
+        const speed = raw.speed ?? clamp(1.5 + avg * 0.55 + (hash(id) % 10) * 0.12, 1.5, 9.5);
+        return {
+          id,
+          name: raw.name,
+          location: raw.location,
+          rarity: raw.rarity,
+          minKg: raw.minKg,
+          maxKg: raw.maxKg,
+          value: Math.round(baseValue),
+          difficulty: diff,
+          speed,
+          weather: raw.weather || null,
+          season: raw.season || null,
+          time: raw.time || null,
+          temp: raw.temp || null,
+          lure: raw.lure || null,
+          deep: !!raw.deep,
+          desc: raw.desc || 'A fish from this region.'
+        };
+      });
+    }
+
+    // Easy fish additions: add a new fish with a single function call.
+    addFish('Bluegill', 'everglades', 'common', 0.1, 0.8, { weather: 'clear', season: 'spring' });
+    addFish('Largemouth Bass', 'everglades', 'uncommon', 1, 6, { lure: 'minnow', weather: 'clear' });
+    addFish('Alligator Gar', 'everglades', 'rare', 8, 70, { time: 'night', weather: 'rain' });
+    addFish('Swamp Phantom Snook', 'everglades', 'secret', 4, 20, { time: 'night', weather: 'rain', season: 'summer' });
+    addFish('Yellow Perch', 'greatlakes', 'common', 0.1, 1.2, { weather: 'clear' });
+    addFish('Lake Trout', 'greatlakes', 'uncommon', 2, 20, { season: 'autumn' });
+    addFish('Muskie', 'greatlakes', 'epic', 6, 30, { season: 'autumn', weather: 'clear' });
+    addFish('Lake Sturgeon', 'greatlakes', 'legendary', 30, 120, { time: 'night', deep: true });
+    addFish('Channel Catfish', 'mississippi', 'common', 1, 10, { weather: 'rain' });
+    addFish('Paddlefish', 'mississippi', 'uncommon', 8, 40, { weather: 'rain' });
+    addFish('Blue Catfish', 'mississippi', 'rare', 15, 60, { weather: 'rain' });
+    addFish('Leviathan Flathead', 'mississippi', 'mythical', 60, 150, { time: 'night', weather: 'rain' });
+    addFish('Yellowtail Snapper', 'caribbean', 'common', 0.4, 4, { weather: 'clear', temp: {min: 22, max: 32} });
+    addFish('Mahi Mahi', 'caribbean', 'uncommon', 4, 20, { time: 'day', weather: 'clear' });
+    addFish('Blue Marlin', 'caribbean', 'epic', 100, 450, { deep: true, time: 'day' });
+    addFish('Golden Tarpon', 'caribbean', 'legendary', 40, 110, { time: 'day', weather: 'clear' });
+    addFish('Pink Salmon', 'alaska', 'common', 1.5, 4, { season: 'summer' });
+    addFish('King Salmon', 'alaska', 'rare', 8, 35, { season: 'summer', weather: 'clear' });
+    addFish('Pacific Halibut', 'alaska', 'epic', 20, 150, { deep: true, weather: 'clear' });
+    addFish('Aurora Dolly Varden', 'alaska', 'secret', 1, 4, { time: 'night', season: 'winter', weather: 'snow' });
+
+    addFish('Red-Bellied Piranha', 'amazon', 'common', 0.3, 1.6, { weather: 'rain' });
+    addFish('Tambaqui', 'amazon', 'uncommon', 5, 30, { weather: 'rain' });
+    addFish('Arapaima', 'amazon', 'epic', 50, 200, { time: 'day', weather: 'clear' });
+    addFish('El Dorado Pacu', 'amazon', 'legendary', 8, 25, { weather: 'rain', season: 'summer' });
+    addFish('Brazilian Mullet', 'brazil', 'common', 0.3, 2, { weather: 'clear' });
+    addFish('Brazilian Snook', 'brazil', 'uncommon', 2, 12, { time: 'day' });
+    addFish('Carnival Parrotfish', 'brazil', 'rare', 2, 10, { time: 'day', weather: 'clear' });
+    addFish('Atlantic Sailfish', 'brazil', 'epic', 20, 60, { deep: true, time: 'day' });
+    addFish('Rainbow Trout', 'patagonia', 'common', 0.5, 4, { weather: 'clear' });
+    addFish('Brown Trout', 'patagonia', 'uncommon', 1, 9, { weather: 'cloudy' });
+    addFish('Patagonian Toothfish', 'patagonia', 'rare', 10, 80, { deep: true, weather: 'clear' });
+    addFish('Fuego Sea Serpent', 'patagonia', 'mythical', 80, 200, { time: 'night', weather: 'rain', temp: {min: 4, max: 14} });
+
+    addFish('Sardine', 'mediterranean', 'common', 0.05, 0.25, { weather: 'clear' });
+    addFish('Seabream', 'mediterranean', 'uncommon', 1, 6, { weather: 'clear' });
+    addFish('Bluefin Tuna', 'mediterranean', 'epic', 100, 400, { deep: true, season: 'summer' });
+    addFish('Poseidon Swordfish', 'mediterranean', 'legendary', 60, 250, { deep: true, time: 'night' });
+    addFish('Roach', 'britlakes', 'common', 0.1, 1.0, { weather: 'cloudy' });
+    addFish('Northern Pike', 'britlakes', 'uncommon', 3, 18, { weather: 'clear' });
+    addFish('Mirror Carp', 'britlakes', 'rare', 8, 35, { weather: 'clear', season: 'spring' });
+    addFish('Loch Wyrm Eel', 'britlakes', 'mythical', 20, 80, { time: 'night', weather: 'rain' });
+    addFish('Atlantic Cod', 'fjords', 'common', 2, 15, { weather: 'clear' });
+    addFish('Haddock', 'fjords', 'uncommon', 1, 6, { weather: 'cloudy' });
+    addFish('Arctic Char', 'fjords', 'rare', 1, 9, { season: 'winter', weather: 'snow' });
+    addFish('Kraken Pup Angler', 'fjords', 'secret', 5, 30, { deep: true, time: 'night' });
+    addFish('Zander', 'danube', 'common', 1, 8, { weather: 'clear' });
+    addFish('Huchen', 'danube', 'uncommon', 5, 30, { season: 'spring' });
+    addFish('Wels Catfish', 'danube', 'rare', 20, 130, { time: 'night', weather: 'rain' });
+    addFish('Beluga Sturgeon', 'danube', 'legendary', 100, 400, { time: 'night' });
+
+    addFish('Nile Tilapia', 'nile', 'common', 0.3, 3, { weather: 'clear', temp: {min: 20, max: 32} });
+    addFish('Tigerfish', 'nile', 'uncommon', 2, 15, { weather: 'clear' });
+    addFish('Nile Perch', 'nile', 'epic', 20, 150, { time: 'day', weather: 'clear' });
+    addFish('Pharaoh Mormyrid', 'nile', 'secret', 1, 5, { time: 'day' });
+    addFish('Alestes Tetra', 'congo', 'common', 0.1, 0.9, { weather: 'rain' });
+    addFish('Vundu Catfish', 'congo', 'uncommon', 10, 60, { weather: 'rain' });
+    addFish('Goliath Tigerfish', 'congo', 'epic', 20, 70, { time: 'day', weather: 'clear' });
+    addFish('Zaire Lungfish', 'congo', 'legendary', 5, 25, { time: 'night' });
+    addFish('Victoria Cichlid', 'victoria', 'common', 0.1, 0.6, { weather: 'clear' });
+    addFish('Semutundu Catfish', 'victoria', 'uncommon', 1, 8, { weather: 'rain' });
+    addFish('Lake Nile Perch', 'victoria', 'rare', 30, 200, { weather: 'clear' });
+    addFish('Sunrise Cichlid', 'victoria', 'mythical', 0.2, 0.7, { time: 'day', season: 'spring', weather: 'clear' });
+    addFish('Cape Hake', 'afrcoast', 'common', 1, 6, { weather: 'clear' });
+    addFish('Yellowfin Tuna', 'afrcoast', 'uncommon', 10, 80, { deep: true, weather: 'clear' });
+    addFish('Black Marlin', 'afrcoast', 'epic', 100, 450, { deep: true, time: 'day' });
+    addFish('Coelacanth', 'afrcoast', 'mythical', 30, 90, { deep: true, time: 'night' });
+
+    addFish('Rohu', 'indian', 'common', 1, 12, { weather: 'clear' });
+    addFish('Catla', 'indian', 'uncommon', 3, 30, { weather: 'clear' });
+    addFish('Golden Mahseer', 'indian', 'rare', 5, 45, { season: 'winter' });
+    addFish('Ganges River Shark', 'indian', 'legendary', 40, 120, { weather: 'rain' });
+    addFish('Horse Mackerel', 'japan', 'common', 0.1, 0.8, { weather: 'clear' });
+    addFish('Tai Red Seabream', 'japan', 'uncommon', 1, 9, { weather: 'clear' });
+    addFish('Oarfish', 'japan', 'legendary', 50, 300, { deep: true, time: 'night' });
+    addFish('Ryujin Koi', 'japan', 'mythical', 5, 25, { time: 'day', weather: 'rain' });
+    addFish('Snakehead', 'mekong', 'common', 1, 8, { weather: 'rain' });
+    addFish('Striped Catfish', 'mekong', 'uncommon', 3, 25, { weather: 'rain' });
+    addFish('Freshwater Stingray', 'mekong', 'epic', 50, 300, { weather: 'rain' });
+    addFish('Mekong Giant Catfish', 'mekong', 'legendary', 100, 300, { season: 'spring', weather: 'rain' });
+    addFish('Milkfish', 'seasia', 'common', 1, 8, { weather: 'clear' });
+    addFish('Giant Trevally', 'seasia', 'rare', 10, 60, { deep: true, weather: 'clear' });
+    addFish('Napoleon Wrasse', 'seasia', 'epic', 20, 100, { time: 'day' });
+    addFish('Ghost Manta Ray', 'seasia', 'mythical', 100, 400, { time: 'night' });
+    addFish('Snow Trout', 'himalaya', 'common', 0.3, 3, { weather: 'cloudy' });
+    addFish('Alpine Loach', 'himalaya', 'uncommon', 0.1, 0.6, { weather: 'clear' });
+    addFish('Sisor Catfish', 'himalaya', 'rare', 0.5, 3, { time: 'night' });
+    addFish('Snow Leopard Trout', 'himalaya', 'legendary', 3, 15, { season: 'winter', weather: 'snow' });
+
+    addFish('Clownfish', 'reef', 'common', 0.05, 0.2, { weather: 'clear', temp: {min: 24, max: 30} });
+    addFish('Parrotfish', 'reef', 'uncommon', 1, 8, { weather: 'clear' });
+    addFish('Coral Trout', 'reef', 'rare', 2, 12, { weather: 'clear' });
+    addFish('Rainbow Dreamfish', 'reef', 'secret', 0.5, 3, { time: 'day', weather: 'clear' });
+    addFish('Redfin Perch', 'murray', 'common', 0.3, 2, { weather: 'clear' });
+    addFish('Golden Perch', 'murray', 'uncommon', 1, 9, { weather: 'clear' });
+    addFish('Murray Cod', 'murray', 'epic', 10, 90, { weather: 'clear' });
+    addFish('Ancient Trout Cod', 'murray', 'legendary', 5, 25, { time: 'night', weather: 'rain' });
+    addFish('Bony Bream', 'billabong', 'common', 0.1, 0.5, { weather: 'clear' });
+    addFish('Spangled Perch', 'billabong', 'uncommon', 0.2, 1.2, { weather: 'rain' });
+    addFish('Barramundi', 'billabong', 'rare', 5, 45, { season: 'summer' });
+    addFish('Dreamtime Barramundi', 'billabong', 'mythical', 20, 60, { time: 'night', weather: 'rain' });
+    addFish('Koaro', 'nzlakes', 'common', 0.05, 0.3, { weather: 'clear' });
+    addFish('Kahawai', 'nzlakes', 'uncommon', 1, 5, { weather: 'clear' });
+    addFish('Taupo Monster', 'nzlakes', 'epic', 5, 22, { weather: 'clear' });
+    addFish('Taniwha Eel', 'nzlakes', 'legendary', 20, 90, { time: 'night' });
+
+    addFish('Icefish', 'antarctic', 'common', 0.2, 1.0, { weather: 'snow', temp: {min: -10, max: 5} });
+    addFish('Antarctic Silverfish', 'antarctic', 'uncommon', 0.1, 0.5, { weather: 'snow' });
+    addFish('Antarctic Toothfish', 'antarctic', 'rare', 20, 120, { deep: true, weather: 'snow' });
+    addFish('Crystal Ghostfish', 'antarctic', 'secret', 1, 6, { time: 'night', weather: 'snow' });
+    addFish('Blue Whiting', 'southern', 'common', 0.2, 1.0, { weather: 'clear' });
+    addFish('Mackerel Icefish', 'southern', 'uncommon', 0.5, 3.0, { weather: 'clear' });
+    addFish('Southern Bluefin Tuna', 'southern', 'epic', 50, 200, { deep: true, weather: 'clear' });
+    addFish('Leviathan Eel', 'southern', 'mythical', 100, 300, { deep: true, time: 'night' });
+
+    addFish('Moonlit Snapper', 'everglades', 'rare', 2, 18, { time: 'night', weather: 'clear' });
+    addFish('Crescent Pike', 'greatlakes', 'rare', 5, 25, { season: 'winter' });
+    addFish('Obsidian Catfish', 'mississippi', 'epic', 25, 100, { time: 'night', weather: 'rain' });
+    addFish('Sunset Marlin', 'caribbean', 'legendary', 90, 480, { deep: true, time: 'sunset' });
+    addFish('Glacier Salmon', 'alaska', 'epic', 10, 60, { season: 'winter', weather: 'snow', deep: true });
+    addFish('River Oracle', 'amazon', 'secret', 12, 38, { weather: 'rain', time: 'night' });
+    addFish('Court of the Sea', 'mediterranean', 'mythical', 120, 520, { deep: true, time: 'night', weather: 'clear' });
+    addFish('Thunder Bass', 'nile', 'rare', 9, 40, { weather: 'rain' });
+    addFish('King of the Rapids', 'indian', 'epic', 25, 110, { weather: 'rain', season: 'spring' });
+    addFish('Azure Ray', 'reef', 'epic', 8, 40, { time: 'day', weather: 'clear' });
+    addFish('Ember Trout', 'murray', 'rare', 4, 20, { weather: 'clear', season: 'autumn' });
+    addFish('Silver Horizon', 'nzlakes', 'legendary', 18, 80, { time: 'day', weather: 'clear' });
+
+    return buildFish();
+  }
+
+    const FISH = buildFish();
+
+    const LOCS = [
+      {id:'everglades', name:'Florida Everglades', continent:'North America', req:0, sea:false, temp:26, weather:{clear:5, cloudy:3, rain:3, snow:0}, scenery:'reeds', waterTop:'#3f8f63', waterBottom:'#123a33', skyTop:'#9fe9ff', skyBottom:'#f7f4d0'},
+      {id:'greatlakes', name:'Great Lakes', continent:'North America', req:5, sea:false, temp:12, weather:{clear:4, cloudy:4, rain:2, snow:0}, scenery:'hills', waterTop:'#2d6fb5', waterBottom:'#0d2f5a', skyTop:'#b6d8ff', skyBottom:'#edf5ff'},
+      {id:'mississippi', name:'Mississippi River', continent:'North America', req:12, sea:false, temp:18, weather:{clear:3, cloudy:4, rain:4, snow:0}, scenery:'hills', waterTop:'#7f6b3d', waterBottom:'#3a3118', skyTop:'#d4e6ff', skyBottom:'#ffe6b8'},
+      {id:'caribbean', name:'Caribbean Waters', continent:'North America', req:20, sea:true, temp:28, weather:{clear:6, cloudy:2, rain:2, snow:0}, scenery:'palms', waterTop:'#1ac9d8', waterBottom:'#0a4e7c', skyTop:'#8be9ff', skyBottom:'#fff5c8'},
+      {id:'alaska', name:'Alaska', continent:'North America', req:30, sea:false, temp:7, weather:{clear:3, cloudy:3, rain:2, snow:4}, scenery:'peaks', waterTop:'#2a7ca0', waterBottom:'#0b2d4f', skyTop:'#b5d3ef', skyBottom:'#f0f5ff'},
+      {id:'amazon', name:'Amazon River', continent:'South America', req:40, sea:false, temp:27, weather:{clear:2, cloudy:2, rain:6, snow:0}, scenery:'jungle', waterTop:'#6f5d2f', waterBottom:'#2c2410', skyTop:'#a7f4b7', skyBottom:'#f8f2b6'},
+      {id:'brazil', name:'Brazilian Coast', continent:'South America', req:55, sea:true, temp:26, weather:{clear:5, cloudy:3, rain:2, snow:0}, scenery:'palms', waterTop:'#1bb6b0', waterBottom:'#0b4d6d', skyTop:'#8fe6ff', skyBottom:'#ffe3a0'},
+      {id:'patagonia', name:'Patagonia', continent:'South America', req:70, sea:false, temp:10, weather:{clear:3, cloudy:4, rain:2, snow:1}, scenery:'peaks', waterTop:'#448aa7', waterBottom:'#133a58', skyTop:'#d2e1f1', skyBottom:'#f3ece3'},
+      {id:'mediterranean', name:'Mediterranean Sea', continent:'Europe', req:85, sea:true, temp:21, weather:{clear:7, cloudy:2, rain:1, snow:0}, scenery:'cliffs', waterTop:'#1e93d8', waterBottom:'#10397c', skyTop:'#94e1ff', skyBottom:'#fff0c9'},
+      {id:'britlakes', name:'British Lakes', continent:'Europe', req:100, sea:false, temp:10, weather:{clear:3, cloudy:4, rain:3, snow:0}, scenery:'hills', waterTop:'#4d7d67', waterBottom:'#1a3a36', skyTop:'#c4d8ef', skyBottom:'#edf2f7'},
+      {id:'fjords', name:'Norwegian Fjords', continent:'Europe', req:120, sea:true, temp:8, weather:{clear:2, cloudy:4, rain:2, snow:2}, scenery:'cliffs', waterTop:'#2f728e', waterBottom:'#0d2e4a', skyTop:'#b4caeb', skyBottom:'#eef2f8'},
+      {id:'danube', name:'Danube River', continent:'Europe', req:140, sea:false, temp:15, weather:{clear:4, cloudy:3, rain:3, snow:0}, scenery:'hills', waterTop:'#4a8b9a', waterBottom:'#1b3e51', skyTop:'#b6dffb', skyBottom:'#fdeec7'},
+      {id:'nile', name:'Nile River', continent:'Africa', req:160, sea:false, temp:29, weather:{clear:8, cloudy:1, rain:1, snow:0}, scenery:'dunes', waterTop:'#7ca65f', waterBottom:'#2d492f', skyTop:'#ffd79b', skyBottom:'#fff4cf'},
+      {id:'congo', name:'Congo River', continent:'Africa', req:180, sea:false, temp:26, weather:{clear:2, cloudy:2, rain:6, snow:0}, scenery:'jungle', waterTop:'#6a5b2f', waterBottom:'#2d2310', skyTop:'#a9e3a8', skyBottom:'#f0f0ab'},
+      {id:'victoria', name:'Lake Victoria', continent:'Africa', req:200, sea:false, temp:24, weather:{clear:5, cloudy:3, rain:2, snow:0}, scenery:'reeds', waterTop:'#3e9fb1', waterBottom:'#113f4f', skyTop:'#9fe9f9', skyBottom:'#ffe9b7'},
+      {id:'afrcoast', name:'African Coast', continent:'Africa', req:225, sea:true, temp:23, weather:{clear:6, cloudy:2, rain:2, snow:0}, scenery:'dunes', waterTop:'#1ea7be', waterBottom:'#0e416c', skyTop:'#8bdcff', skyBottom:'#ffe0a2'},
+      {id:'indian', name:'Indian Rivers', continent:'Asia', req:250, sea:false, temp:27, weather:{clear:4, cloudy:3, rain:3, snow:0}, scenery:'hills', waterTop:'#8e7848', waterBottom:'#3d2e1a', skyTop:'#ffd28c', skyBottom:'#ffe9b0'},
+      {id:'japan', name:'Japanese Coast', continent:'Asia', req:280, sea:true, temp:18, weather:{clear:4, cloudy:3, rain:3, snow:0}, scenery:'cliffs', waterTop:'#2b77b6', waterBottom:'#0a2f5d', skyTop:'#ffbad2', skyBottom:'#fff0e0'},
+      {id:'mekong', name:'Mekong River', continent:'Asia', req:310, sea:false, temp:27, weather:{clear:3, cloudy:2, rain:5, snow:0}, scenery:'jungle', waterTop:'#7b653f', waterBottom:'#2d2713', skyTop:'#a8f0c0', skyBottom:'#f7f0b6'},
+      {id:'seasia', name:'Southeast Asian Islands', continent:'Asia', req:340, sea:true, temp:28, weather:{clear:5, cloudy:2, rain:3, snow:0}, scenery:'palms', waterTop:'#18c0c0', waterBottom:'#085d79', skyTop:'#8fe9ff', skyBottom:'#fff4ba'},
+      {id:'himalaya', name:'Himalayan Lakes', continent:'Asia', req:375, sea:false, temp:8, weather:{clear:4, cloudy:3, rain:1, snow:2}, scenery:'peaks', waterTop:'#3a9ec9', waterBottom:'#0d3b5c', skyTop:'#afd5ff', skyBottom:'#f3f7ff'},
+      {id:'reef', name:'Great Barrier Reef', continent:'Oceania', req:410, sea:true, temp:26, weather:{clear:6, cloudy:3, rain:1, snow:0}, scenery:'palms', waterTop:'#20d0d8', waterBottom:'#0770a0', skyTop:'#8be8ff', skyBottom:'#fff3c2'},
+      {id:'murray', name:'Murray River', continent:'Oceania', req:450, sea:false, temp:21, weather:{clear:5, cloudy:3, rain:2, snow:0}, scenery:'dunes', waterTop:'#7b6a3a', waterBottom:'#2f2a12', skyTop:'#ffd7a4', skyBottom:'#fff0c5'},
+      {id:'billabong', name:'Australian Billabongs', continent:'Oceania', req:490, sea:false, temp:24, weather:{clear:4, cloudy:2, rain:4, snow:0}, scenery:'reeds', waterTop:'#5d894d', waterBottom:'#1d341e', skyTop:'#ffce93', skyBottom:'#fff0b9'},
+      {id:'nzlakes', name:'New Zealand Lakes', continent:'Oceania', req:530, sea:false, temp:13, weather:{clear:4, cloudy:4, rain:2, snow:0}, scenery:'peaks', waterTop:'#2e8bb0', waterBottom:'#0a395a', skyTop:'#b0d9f3', skyBottom:'#eef8ff'},
+      {id:'antarctic', name:'Antarctic Waters', continent:'Antarctica', req:580, sea:true, temp:-2, weather:{clear:2, cloudy:3, rain:1, snow:5}, scenery:'ice', waterTop:'#5cb4d6', waterBottom:'#0e3c5e', skyTop:'#d2e5f5', skyBottom:'#f4f8ff'},
+      {id:'southern', name:'Southern Ocean', continent:'Antarctica', req:650, sea:true, temp:3, weather:{clear:3, cloudy:3, rain:2, snow:2}, scenery:'ice', waterTop:'#2d5d8a', waterBottom:'#08213e', skyTop:'#9aaecd', skyBottom:'#dfe8ef'}
+    ];
+
+    const LOC = Object.fromEntries(LOCS.map((loc) => [loc.id, loc]));
+    const CONTS = [...new Set(LOCS.map((l) => l.continent))];
+
+    const RODS = [
+      {id:'starter', name:'Starter Rod', price:0, strength:2, reel:2, control:2, cast:1, ease:0},
+      {id:'wooden', name:'Wooden Rod', price:120, strength:3, reel:3, control:3, cast:2, ease:0.4},
+      {id:'fibreglass', name:'Fiberglass Rod', price:450, strength:4.2, reel:4, control:4, cast:3, ease:0.8},
+      {id:'carbon', name:'Carbon Rod', price:1400, strength:5.5, reel:5.5, control:5.5, cast:4, ease:1.3},
+      {id:'pro', name:'Pro Rod', price:3500, strength:7, reel:7, control:6.5, cast:5, ease:1.9},
+      {id:'master', name:'Master Rod', price:9000, strength:8.5, reel:8, control:8, cast:6, ease:2.6},
+      {id:'legend', name:'Legend Rod', price:30000, strength:10, reel:9, control:9, cast:7.5, ease:3.4},
+      {id:'mythic', name:'Mythic Rod', price:90000, strength:12, reel:11, control:11, cast:9, ease:4.5}
+    ];
+    const ROD = Object.fromEntries(RODS.map((r) => [r.id, r]));
+
+    const REELS = [
+      {id:'basic', name:'Basic Reel', price:0, control:1, tension:1, luck:1, cast:1},
+      {id:'steel', name:'Steel Reel', price:180, control:1.15, tension:1.2, luck:1.05, cast:1.08},
+      {id:'titan', name:'Titan Reel', price:650, control:1.3, tension:1.35, luck:1.12, cast:1.15},
+      {id:'magnetic', name:'Magnetic Reel', price:2200, control:1.45, tension:1.5, luck:1.18, cast:1.25},
+      {id:'drag', name:'Drag Pro', price:6000, control:1.6, tension:1.68, luck:1.26, cast:1.35},
+      {id:'zenith', name:'Zenith Reel', price:16000, control:1.8, tension:1.9, luck:1.38, cast:1.5},
+      {id:'eternal', name:'Eternal Reel', price:42000, control:2.05, tension:2.15, luck:1.5, cast:1.7}
+    ];
+    const REEL = Object.fromEntries(REELS.map((r) => [r.id, r]));
+
+    const LURES = [
+      {id:'worm', name:'Basic Worm', price:0, chance:{common:1.8, uncommon:1.1}, mid:1.2, deep:1.0, desc:'Good for routine catches.'},
+      {id:'minnow', name:'Minnow Lure', price:40, chance:{uncommon:1.35}, mid:1.7, desc:'Helps with mid-sized fish.'},
+      {id:'golden', name:'Golden Lure', price:350, chance:{uncommon:1.2, rare:2.1, epic:1.4}, mid:1.35, desc:'Raises rare fish odds.'},
+      {id:'deep', name:'Deep Sea Lure', price:1500, chance:{rare:1.3}, deep:2.3, desc:'Attracts deep-water fish.'},
+      {id:'legend', name:'Legendary Lure', price:6000, chance:{epic:1.8, legendary:3.8}, mid:1.2, desc:'Boosts legendary fish odds.'},
+      {id:'myth', name:'Mythic Lure', price:20000, chance:{legendary:2.1, mythical:4.8}, deep:1.3, desc:'Ideal for rare big catches.'},
+      {id:'secret', name:'Secret Lure', price:60000, chance:{mythical:1.5, secret:8}, deep:1.5, desc:'Rare and exotic fish only.'}
+    ];
+    const LURE = Object.fromEntries(LURES.map((l) => [l.id, l]));
+
+    const MAX_ROD_LV = 3;
+    const rodValue = () => {
+      const rod = ROD[S.rod] || ROD.starter;
+      const lvl = S.rods[S.rod]?.lv || 0;
+      const mult = 1 + lvl * 0.08;
+      return { ...rod, strength: rod.strength * mult, reel: rod.reel * mult, control: rod.control * mult, ease: rod.ease * mult, lv: lvl };
+    };
+    const reelValue = () => {
+      const reel = REEL[S.reel] || REEL.basic;
+      return reel;
+    };
+
+    const defaultSave = () => ({
+      coins: 60,
+      loc: 'everglades',
+      unlocked: ['everglades'],
+      rods: { starter: { lv: 0 } },
+      rod: 'starter',
+      reels: { basic: 1 },
+      reel: 'basic',
+      lures: { worm: 1 },
+      lure: 'worm',
+      book: {},
+      inv: [],
+      total: 0,
+      stats: { earned: 0, sold: 0, lost: 0, snaps: 0, time: 0, heaviest: 0, rar: {}, cont: {} },
+      ach: {},
+      quests: {},
+      daily: {},
+      clock: 0.35,
+      settings: { season: 'auto', music: true, sfx: true, vol: 0.8 },
+      tournaments: { active: null, progress: {} },
+      tournamentHistory: []
+    });
+
+    const Save = {
+      KEY: 'world_fishing_adventures_v3',
+      load() {
+        try {
+          const raw = localStorage.getItem(this.KEY);
+          if (!raw) return defaultSave();
+          const parsed = JSON.parse(raw);
+          return Object.assign(defaultSave(), parsed);
+        } catch (e) {
+          return defaultSave();
+        }
+      },
+      save() {
+        try { localStorage.setItem(this.KEY, JSON.stringify(S)); } catch (e) {}
+      },
+      export() { return btoa(unescape(encodeURIComponent(JSON.stringify(S)))); },
+      import(raw) {
+        try {
+          const s = raw.trim();
+          const obj = JSON.parse(s[0] === '{' ? s : decodeURIComponent(escape(atob(s))));
+          if (obj && obj.coins !== undefined) Object.assign(S, defaultSave(), obj);
+        } catch (e) {
+          UI.toast('Save import failed.', 'bad');
+        }
+      },
+      reset() { localStorage.removeItem(this.KEY); location.reload(); }
+    };
+
+    let S = Save.load();
+
+    const ACH = [];
+    function award(id, name, desc, test, reward) { ACH.push({ id, name, desc, test, reward }); }
+    const countKnown = (s) => Object.keys(s.book).length;
+
+    award('c10', 'Angler 10', 'Catch 10 fish', (s) => s.total >= 10, 20);
+    award('c50', 'Angler 50', 'Catch 50 fish', (s) => s.total >= 50, 60);
+    award('c100', 'Angler 100', 'Catch 100 fish', (s) => s.total >= 100, 150);
+    award('c250', 'Angler 250', 'Catch 250 fish', (s) => s.total >= 250, 320);
+    award('c500', 'Angler 500', 'Catch 500 fish', (s) => s.total >= 500, 500);
+    award('c1000', 'Angler 1000', 'Catch 1000 fish', (s) => s.total >= 1000, 1000);
+    award('s5', 'Collector 5', 'Discover 5 species', (s) => countKnown(s) >= 5, 30);
+    award('s15', 'Collector 15', 'Discover 15 species', (s) => countKnown(s) >= 15, 80);
+    award('s30', 'Collector 30', 'Discover 30 species', (s) => countKnown(s) >= 30, 150);
+    award('s50', 'Collector 50', 'Discover 50 species', (s) => countKnown(s) >= 50, 300);
+    award('s75', 'Collector 75', 'Discover 75 species', (s) => countKnown(s) >= 75, 480);
+    award('s100', 'Collector 100', 'Discover 100 species', (s) => countKnown(s) >= 100, 700);
+    RARITY_ORDER.slice(1).forEach((rar, i) => {
+      award(`r_${rar}`, `First ${rar}`, `Catch one ${rar} fish`, (s) => (s.stats.rar[rar] || 0) >= 1, (i + 1) * 50);
+    });
+    award('big', 'Heavyweight', 'Catch a fish over 100 kg', (s) => (s.stats.heaviest || 0) >= 100, 500);
+    award('tour', 'World Traveller', 'Fish on 4 continents', (s) => Object.keys(s.stats.cont || {}).length >= 4, 300);
+    award('allloc', 'Explorer', 'Unlock every location', (s) => s.unlocked.length >= LOCS.length, 2000);
+    award('allrod', 'Gear Head', 'Own every rod', (s) => Object.keys(s.rods).length >= RODS.length, 2000);
+    award('allreel', 'Reel Master', 'Own every reel', (s) => Object.keys(s.reels).length >= REELS.length, 1500);
+    award('alllure', 'Tackle Box', 'Own every lure', (s) => Object.keys(s.lures).length >= LURES.length, 1200);
+    award('allfish', 'Master Angler', 'Discover every fish', (s) => countKnown(s) >= FISH.length, 20000);
+
+    const QUESTS = [
+      ['q1', 'First Steps', 'Catch 5 fish', (s) => s.total, 5, 30],
+      ['q2', 'Seller', 'Sell 10 fish', (s) => s.stats.sold, 10, 40],
+      ['q3', 'Naturalist', 'Discover 5 species', (s) => countKnown(s), 5, 50],
+      ['q4', 'Better Gear', 'Own 2 rods', (s) => Object.keys(s.rods).length, 2, 60],
+      ['q5', 'Traveler', 'Unlock 3 locations', (s) => s.unlocked.length, 3, 80],
+      ['q6', 'Bounty', 'Earn 1000 coins', (s) => s.stats.earned, 1000, 120]
+    ];
+
+    const DAILY_TASKS = [
+      ['Catch #n fish', [8, 12, 16], () => true, 12],
+      ['Catch #n uncommon-or-better fish', [3, 5], (fish) => RARITY_ORDER.indexOf(fish.rarity) >= 1, 30],
+      ['Catch #n rare-or-better fish', [1, 2], (fish) => RARITY_ORDER.indexOf(fish.rarity) >= 2, 20],
+      ['Catch #n different species', [3, 5], () => true, 25],
+      ['Catch #n fish in rain', [3, 5], (fish, weather) => weather === 'rain', 30],
+      ['Catch #n deep-water fish', [1, 3], (fish) => fish.deep, 35]
+    ];
+
+    const Ach = {
+      today() {
+        const date = new Date().toISOString().slice(0, 10);
+        if (S.daily.date !== date) {
+          const h = hash(date) % DAILY_TASKS.length;
+          const task = DAILY_TASKS[h];
+          const goal = task[1][hash(date + task[0]) % task[1].length];
+          S.daily = { date, index: h, goal, prog: 0, done: false };
+        }
+        return S.daily;
+      },
+      taskText() {
+        const d = this.today();
+        const task = DAILY_TASKS[d.index];
+        return task[0].replace('#n', d.goal);
+      },
+      reward() {
+        const d = this.today();
+        const task = DAILY_TASKS[d.index];
+        return d.goal * task[3];
+      },
+      onCatch(fish, weight, weather) {
+        const d = this.today();
+        const task = DAILY_TASKS[d.index];
+        if (!d.done && task[2](fish, weather)) {
+          d.prog += 1;
+          if (d.prog >= d.goal) {
+            d.done = true;
+            S.coins += this.reward();
+            UI.toast(`Daily challenge complete! +${this.reward()} 🪙`, 'good');
+          }
+        }
+        if (weight > (S.stats.heaviest || 0)) S.stats.heaviest = weight;
+        this.check();
+      },
+      check() {
+        for (const a of ACH) {
+          if (!S.ach[a.id] && a.test(S)) {
+            S.ach[a.id] = Date.now();
+            S.coins += a.reward;
+            UI.toast(`🏆 ${a.name}: +${a.reward} 🪙`, 'good');
+          }
+        }
+        for (const q of QUESTS) {
+          if (!S.quests[q[0]] && q[3](S) >= q[4]) {
+            S.quests[q[0]] = 1;
+            S.coins += q[5];
+            UI.toast(`📜 ${q[1]} complete: +${q[5]} 🪙`, 'good');
+          }
+        }
+        Save.save();
+        UI.hud();
+      },
+      statsWindow() {
+        const st = S.stats;
+        const d = this.today();
+        const task = DAILY_TASKS[d.index];
+        const progressPct = clamp((d.prog / d.goal) * 100, 0, 100);
+        const totalKnown = countKnown(S);
+        UI.open('Stats & Goals', `
+          <div class="grid">
+            <div class="card"><h3>Statistics</h3><div class="muted">Total caught: ${S.total}</div><div class="muted">Species: ${totalKnown}/${FISH.length}</div><div class="muted">Coins earned: ${st.earned}</div><div class="muted">Fish sold: ${st.sold}</div><div class="muted">Fish lost: ${st.lost}</div><div class="muted">Snapped: ${st.snaps}</div></div>
+            <div class="card"><h3>By rarity</h3>${RARITY_ORDER.map((rar) => `<div class="muted" style="color:${RARITIES[rar].color}">${rar}: ${st.rar[rar] || 0}</div>`).join('')}</div>
+            <div class="card"><h3>Daily Challenge</h3><div class="muted">${this.taskText()}</div><div class="bar" style="margin-top:8px"><i style="width:${progressPct}%"></i></div><div class="muted">${d.done ? '✅ Complete' : `${d.prog}/${d.goal} complete`} · Reward ${this.reward()} 🪙</div></div>
+          </div>
+          <h3 style="margin-top:18px">Quests</h3>
+          <div class="grid">${QUESTS.map((q) => {
+            const progress = Math.min(q[4], q[3](S));
+            const pct = (progress / q[4]) * 100;
+            return `<div class="card ${S.quests[q[0]] ? 'selected' : ''}"><h4>${S.quests[q[0]] ? '✅' : '📜'} ${q[1]}</h4><div class="muted">${q[2]}</div><div class="bar" style="margin-top:8px"><i style="width:${pct}%"></i></div><div class="tiny">${progress}/${q[4]}</div></div>`;
+          }).join('')}</div>
+          <h3 style="margin-top:18px">Achievements (${Object.keys(S.ach).length}/${ACH.length})</h3>
+          <div class="grid">${ACH.map((a) => `<div class="card ${S.ach[a.id] ? '' : 'locked'}"><h4>${S.ach[a.id] ? '🏆' : '🔒'} ${a.name}</h4><div class="muted">${a.desc}</div></div>`).join('')}</div>
+        `);
+      }
+    };
+
+    const Weather = {
+      state: 'clear',
+      tick: 45,
+      now() {
+        const loc = LOC[S.loc] || LOC.everglades;
+        const season = S.settings.season === 'auto' ? getSeason() : S.settings.season;
+        const light = 0.5 + 0.5 * Math.sin((S.clock - 0.22) * Math.PI * 2);
+        const daytime = light > 0.52;
+        const nighttime = light < 0.48;
+        return {
+          season,
+          weather: this.state,
+          temp: loc.temp,
+          light,
+          day: daytime,
+          night: nighttime
+        };
+      },
+      roll() {
+        const loc = LOC[S.loc] || LOC.everglades;
+        const weights = loc.weather || {clear: 5, cloudy: 3, rain: 2, snow: 0};
+        const arr = ['clear', 'cloudy', 'rain', 'snow'];
+        let t = Math.random() * Object.values(weights).reduce((a, b) => a + b, 0);
+        for (let i = 0; i < arr.length; i++) {
+          t -= weights[arr[i]] || 0;
+          if (t <= 0) {
+            this.state = arr[i];
+            break;
+          }
+        }
+        this.tick = 40 + Math.random() * 80;
+      }
+    };
+
+    function getSeason() {
+      const month = new Date().getMonth();
+      if ([11, 0, 1].includes(month)) return 'winter';
+      if ([2, 3, 4].includes(month)) return 'spring';
+      if ([5, 6, 7].includes(month)) return 'summer';
+      return 'autumn';
+    }
+
+    function fishValue(fish, weight) {
+      const ratio = (weight - fish.minKg) / Math.max(0.1, fish.maxKg - fish.minKg);
+      return Math.round(fish.value * (0.65 + 0.7 * clamp(ratio, 0, 1)));
+    }
+
+    function randomWeight(fish) {
+      const p = Math.random();
+      const range = fish.maxKg - fish.minKg;
+      return +(fish.minKg + range * (p ** 1.6)).toFixed(2);
+    }
+
+    function getAvailableFish() {
+      const loc = S.loc;
+      const env = Weather.now();
+      const season = env.season;
+      const temp = loc.temp;
+      return FISH.filter((fish) => {
+        if (fish.location !== loc) return false;
+        if (fish.time && fish.time !== 'sunset') {
+          const okDay = fish.time === 'day' ? env.day : fish.time === 'night' ? env.night : false;
+          if (!okDay) return false;
+        }
+        if (fish.weather && fish.weather !== Weather.state) return false;
+        if (fish.season && fish.season !== season) return false;
+        if (fish.temp && (temp < fish.temp.min || temp > fish.temp.max)) return false;
+        return true;
+      });
+    }
+
+    function pickFish() {
+      const env = Weather.now();
+      const rod = rodValue();
+      const lure = LURE[S.lure] || LURE.worm;
+      const locList = getAvailableFish();
+      if (!locList.length) return FISH.find(f => f.location === S.loc) || FISH[0];
+      let total = 0;
+      const scored = locList.map((fish) => {
+        let w = RARITIES[fish.rarity].weight * (lure.chance?.[fish.rarity] || 1);
+        if (fish.lure && fish.lure !== S.lure) w *= 0.45;
+        if (fish.deep && lure.deep) w *= lure.deep;
+        if (fish.deep && !lure.deep) w *= 0.5;
+        if ((fish.minKg + fish.maxKg) / 2 >= 1 && (fish.minKg + fish.maxKg) / 2 <= 30) w *= lure.mid || 1;
+        w *= 1 + rod.cast * 0.04;
+        if (fish.weather === Weather.state) w *= 1.2;
+        if (fish.season === env.season) w *= 1.2;
+        total += w;
+        return { fish, w };
+      });
+      let r = Math.random() * total;
+      for (const item of scored) {
+        r -= item.w;
+        if (r <= 0) return item.fish;
+      }
+      return scored[0].fish;
+    }
+
+    const FishArt = {
+      cache: {},
+      url(fish, knocked = false) {
+        const key = `${fish.id}:${knocked ? 'off' : 'on'}`;
+        if (this.cache[key]) return this.cache[key];
+        const c = document.createElement('canvas');
+        c.width = 140; c.height = 72;
+        const ctx = c.getContext('2d');
+        const h = hash(fish.name + fish.location);
+        const body = `hsl(${h % 360} 78% 60%)`;
+        const belly = `hsl(${(h >> 4) % 360} 70% 80%)`;
+        const fin = `hsl(${(h >> 2) % 360} 70% 45%)`;
+        ctx.translate(70, 36);
+        ctx.scale(1, 1);
+        ctx.fillStyle = knocked ? 'rgba(255,255,255,0.2)' : body;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 46, 22, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = knocked ? 'rgba(255,255,255,0.08)' : belly;
+        ctx.beginPath();
+        ctx.ellipse(-8, 4, 24, 12, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = knocked ? 'rgba(255,255,255,0.18)' : fin;
+        ctx.beginPath();
+        ctx.moveTo(14, -5); ctx.lineTo(34, -18); ctx.lineTo(34, 10); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(-50, -2, 10, 4);
+        ctx.fillStyle = '#0b1b34';
+        ctx.beginPath(); ctx.arc(22, -8, 3, 0, Math.PI * 2); ctx.fill();
+        const data = c.toDataURL();
+        this.cache[key] = data;
+        return data;
+      }
+    };
+
+    const Fishing = {
+      state: 'idle',
+      fish: null,
+      weight: 0,
+      biteTimer: 0,
+      battleTime: 0,
+      player: 0.5,
+      cycle: 0,
+      progress: 0,
+      tension: 0,
+      goal: 100,
+      message: 'Press SPACE or tap FISH to cast.',
+      reset() {
+        this.state = 'idle';
+        this.fish = null;
+        this.weight = 0;
+        this.biteTimer = 0;
+        this.battleTime = 0;
+        this.player = 0.5;
+        this.cycle = 0;
+        this.progress = 0;
+        this.tension = 0;
+        this.goal = 100;
+      },
+      cast() {
+        const env = Weather.now();
+        const fish = pickFish();
+        this.fish = fish;
+        this.weight = randomWeight(fish);
+        this.state = 'waiting';
+        this.biteTimer = rnd(1.0, 3.0);
+        this.battleTime = 0;
+        this.player = 0.5;
+        this.progress = 0;
+        this.tension = 0;
+        this.goal = 70 + (fish.difficulty * 12); 
+        this.message = 'Waiting for a bite...';
+        Snd.sfx('cast');
+      },
+      triggerHook() {
+        if (this.state !== 'bite') return;
+        this.state = 'battle';
+        this.player = 0.5;
+        this.battleTime = 0;
+        this.progress = 0;
+        this.tension = 0;
+        this.goal = 70 + (this.fish.difficulty * 12);
+        this.message = 'SPACE when the line is in the green zone!';
+        Snd.sfx('bite');
+      },
+      tryCatch() {
+        if (this.state !== 'battle') return;
+        const zone = 0.18 + (1.0 - clamp(this.fish.difficulty / 9, 0, 1)) * 0.08;
+        const center = 0.5 + Math.sin(this.battleTime * (2.5 + this.fish.speed * 0.15)) * 0.38;
+        const within = Math.abs(this.player - center) < zone * 0.65;
+        const reel = reelValue();
+        const rod = rodValue();
+        if (within) {
+          const gain = 18 + (rod.strength + reel.control) * 6 + (this.fish.rarity === 'secret' ? 12 : 0);
+          this.progress += gain;
+          this.tension = Math.max(0, this.tension - 14);
+          if (this.progress >= this.goal) this.win();
+        } else {
+          this.tension += 18 + (9 - this.fish.difficulty) * 1.5;
+          if (this.tension > 100) this.lose('The fish snapped the line!');
+        }
+        Snd.sfx(within ? 'ring' : 'bad');
+      },
+      lose(msg) {
+        S.stats.lost += 1;
+        UI.toast(msg, 'bad');
+        Snd.sfx('lose');
+        this.reset();
+      },
+      win() {
+        const fish = this.fish;
+        const weight = this.weight;
+        const value = fishValue(fish, weight);
+        S.stats.earned += value;
+        const didNew = Inv.addCatch(fish, weight, value);
+        Ach.onCatch(fish, weight, Weather.state);
+        const rarityIndex = RARITY_ORDER.indexOf(fish.rarity);
+        Snd.sfx(rarityIndex >= 4 ? 'legend' : 'catch');
+        this.state = 'result';
+        UI.catchCard(fish, weight, value, didNew);
+      },
+      update(dt) {
+        S.clock = (S.clock + dt / 600) % 1;
+        S.stats.time += dt;
+        Weather.tick -= dt;
+        if (Weather.tick <= 0) {
+          Weather.roll();
+          Weather.tick = 45 + Math.random() * 50;
+        }
+
+        if (this.state === 'waiting') {
+          this.biteTimer -= dt;
+          this.message = `Waiting for a bite... ${this.biteTimer.toFixed(1)}s`;
+          if (this.biteTimer <= 0) {
+            this.state = 'bite';
+            this.message = 'BITE! Press SPACE now!';
+            Snd.sfx('bite');
+          }
+        } else if (this.state === 'bite') {
+          this.message = 'BITE! Press SPACE now!';
+        } else if (this.state === 'battle') {
+          this.battleTime += dt;
+          const drift = 0.5 + Math.sin(this.battleTime * (2.5 + this.fish.speed * 0.2)) * 0.38;
+          this.player = drift;
+          this.message = 'Keep the line in the green window!';
+          const tensionDecay = 4 * dt;
+          this.tension = Math.max(0, this.tension - tensionDecay);
+          if (this.progress >= this.goal) this.win();
+        }
+      },
+      draw() {
+        const c = cx;
+        const W = cv.width;
+        const H = cv.height;
+        const loc = LOC[S.loc];
+        const env = Weather.now();
+        const skyGrad = c.createLinearGradient(0, 0, 0, H);
+        skyGrad.addColorStop(0, loc.skyTop);
+        skyGrad.addColorStop(1, loc.skyBottom);
+        c.fillStyle = skyGrad;
+        c.fillRect(0, 0, W, H);
+
+        const sunX = W * ((S.clock + 0.2) % 1.0);
+        const sunY = 80 + Math.sin((S.clock + 0.2) * Math.PI * 2) * 26;
+        c.fillStyle = env.night ? 'rgba(20,30,65,0.6)' : 'rgba(255,255,255,0.2)';
+        c.beginPath(); c.arc(sunX, sunY, 28, 0, Math.PI * 2); c.fill();
+
+        c.fillStyle = loc.waterTop;
+        c.fillRect(0, 250, W, H - 250);
+        c.fillStyle = loc.waterBottom;
+        c.fillRect(0, 290, W, H - 290);
+
+        for (let i = 0; i < 22; i++) {
+          const x = (i * 80 + S.clock * 180) % (W + 100) - 20;
+          const y = 270 + ((i * 43) % 100);
+          c.fillStyle = 'rgba(255,255,255,0.06)';
+          c.fillRect(x, y, 70, 3);
+        }
+
+        const waterY = 278;
+        if (this.state === 'waiting' || this.state === 'bite' || this.state === 'battle') {
+          const fish = this.fish || FISH[0];
+          c.globalAlpha = 0.8;
+          const x = W * 0.72 + Math.sin(S.clock * 5 + fish.id.length) * 38;
+          const y = waterY + Math.sin(S.clock * 7 + fish.name.length) * 10;
+          const img = new Image();
+          img.src = FishArt.url(fish);
+          const size = 52 + this.weight * 0.1;
+          c.drawImage(img, x - 40, y - 20, size, size * 0.5);
+          c.globalAlpha = 1;
+        }
+
+        // dock and fisherman
+        c.fillStyle = '#6f4b30';
+        c.fillRect(0, 310, 160, 16);
+        for (let x = 20; x < 150; x += 50) c.fillRect(x, 326, 10, 70);
+        c.strokeStyle = '#e8c39a';
+        c.lineWidth = 8;
+        c.beginPath(); c.moveTo(110, 305); c.lineTo(110, 250); c.stroke();
+        c.fillStyle = '#f4d0a5';
+        c.beginPath(); c.arc(110, 235, 14, 0, Math.PI * 2); c.fill();
+        c.fillStyle = '#e04a48';
+        c.fillRect(98, 245, 24, 20);
+
+        const tipX = 160;
+        const tipY = 208;
+        const rodColor = `hsl(${(RodsIndex() || 0) * 38 + 25} 70% 60%)`;
+        c.strokeStyle = rodColor;
+        c.lineWidth = 4;
+        c.beginPath();
+        c.moveTo(112, 245);
+        c.quadraticCurveTo(150, 185, tipX, tipY);
+        c.stroke();
+
+        if (this.state === 'waiting' || this.state === 'bite' || this.state === 'battle') {
+          const linePos = this.state === 'battle' ? this.player : 0.5;
+          const lineX = 160 + (tipX - 160) * 0.4 + linePos * 110;
+          const lineY = 214 + (this.state === 'battle' ? 60 : 70);
+          c.strokeStyle = '#eef5ff';
+          c.lineWidth = 2;
+          c.beginPath(); c.moveTo(tipX, tipY); c.lineTo(lineX, lineY); c.stroke();
+
+          if (this.state === 'battle') {
+            const zoneX = 183 + linePos * 210;
+            const zoneW = 90;
+            const zoneL = zoneX - zoneW / 2;
+            const zoneR = zoneX + zoneW / 2;
+            c.fillStyle = 'rgba(60, 255, 120, 0.3)';
+            c.fillRect(zoneL, 140, zoneW, 28);
+            c.strokeStyle = '#7bff9f';
+            c.strokeRect(zoneL, 140, zoneW, 28);
+            c.fillStyle = '#fff';
+            c.fillRect(lineX - 4, lineY - 10, 8, 20);
+            c.fillStyle = '#ff635c';
+            c.fillRect(lineX - 4, lineY - 10, 8, 20);
+          }
+        }
+
+        if (this.state === 'battle') {
+          const barX = W * 0.5 - 170;
+          const barY = 52;
+          c.fillStyle = 'rgba(0,0,0,0.35)';
+          c.fillRect(barX - 10, barY - 26, 360, 72);
+          c.fillStyle = '#e9f7ff';
+          c.font = 'bold 12px sans-serif';
+          c.fillText('TENSION', barX, barY + 8);
+          c.fillText('FIGHT', barX + 200, barY + 8);
+          c.fillStyle = '#fff2';
+          c.fillRect(barX, barY + 18, 340, 12);
+          c.fillRect(barX + 200, barY + 18, 120, 12);
+          c.fillStyle = this.tension > 70 ? '#ff5e5e' : '#ffcc4d';
+          c.fillRect(barX, barY + 18, 340 * (this.tension / 100), 12);
+          c.fillStyle = '#4ae0ff';
+          c.fillRect(barX + 200, barY + 18, 120 * (this.progress / this.goal), 12);
+        }
+      }
+    };
+
+    const Inv = {
+      addCatch(fish, weight, value) {
+        const book = S.book[fish.id] || { n: 0, best: 0 };
+        book.n += 1;
+        if (weight > book.best) book.best = weight;
+        S.book[fish.id] = book;
+        S.inv.push({ id: fish.id, weight, value });
+        S.total += 1;
+        S.stats.rar[fish.rarity] = (S.stats.rar[fish.rarity] || 0) + 1;
+        S.coins += value;
+        S.stats.earned += value;
+        S.stats.heaviest = Math.max(S.stats.heaviest || 0, weight);
+        Save.save();
+        return !S.book[fish.id] || book.n === 1;
+      },
+      show() {
+        const total = S.inv.reduce((sum, x) => sum + x.value, 0);
+        UI.open('Inventory', `
+          <div class="grid">
+            <div class="card"><h3>Bag</h3><div class="muted">${S.inv.length} fish · ${total} coins</div></div>
+            <div class="card"><h3>Coins</h3><div class="muted">${S.coins} 🪙</div></div>
+          </div>
+          <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;">
+            <button class="button success" onclick="Inv.sellAll()">Sell all</button>
+            <button class="button" onclick="Inv.book()">Collection</button>
+          </div>
+          <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px;">${S.inv.length ? [...S.inv].slice(-30).reverse().map((x, i) => {
+            const fish = FISH_BY_ID[x.id] || FISH.find((f) => f.id === x.id);
+            if (!fish) return '';
+            return `<div class="card"><div style="display:flex;align-items:center;gap:10px"><img style="width:60px;height:30px;border-radius:8px" src="${FishArt.url(fish)}"/><div style="flex:1"><div style="font-weight:800;color:${RARITIES[fish.rarity].color}">${fish.name}</div><div class="muted">${x.weight}kg · ${x.value} 🪙</div></div><button class="button danger" onclick="Inv.sellIndex(${S.inv.indexOf(x)})">Sell</button></div></div>`;
+          }).join('') : '<div class="card"><div class="muted">No fish yet. Cast and reel one in.</div></div>'}</div>
+        `);
+      },
+      book() {
+        const totalCaught = Object.values(S.book).reduce((sum, b) => sum + (b?.n || 0), 0);
+        UI.open('Fish Collection Book', `
+          <div class="grid">${FISH.map((fish) => {
+            const caught = !!S.book[fish.id];
+            return `<div class="card ${caught ? '' : 'locked'}" onclick="Inv.detail('${fish.id}')"><img src="${FishArt.url(fish, !caught)}" style="width:100%;height:60px;object-fit:contain;filter:${caught ? 'none' : 'grayscale(1) contrast(0.5)'}"/><h4 style="color:${RARITIES[fish.rarity].color}">${caught ? fish.name : '???'}</h4><div class="muted">${caught ? fish.rarity.toUpperCase() : 'Unknown fish'}</div></div>`;
+          }).join('')}</div>
+        `);
+      },
+      detail(id) {
+        const fish = FISH_BY_ID[id] || FISH.find((f) => f.id === id);
+        if (!fish) return;
+        const caught = !!S.book[id];
+        const c = RARITIES[fish.rarity].color;
+        UI.modal(`<div class="modal-box legend" style="border-color:${c};box-shadow:0 0 20px ${c};"><img src="${FishArt.url(fish, !caught)}"/><h2>${caught ? fish.name : 'Unknown'}</h2><div class="tag" style="background:${c}">${caught ? fish.rarity.toUpperCase() : 'UNDISCOVERED'}</div><div class="muted">Location: ${LOC[fish.location]?.name || fish.location}</div><div class="muted">Weight: ${caught ? `${fish.minKg}-${fish.maxKg}kg` : '??'}</div><div class="muted">Value: ${caught ? fish.value : '??'} 🪙</div></div>`);
+      },
+      sellIndex(index) {
+        const entry = S.inv[index];
+        if (!entry) return;
+        const fish = FISH_BY_ID[entry.id] || FISH.find((f) => f.id === entry.id);
+        if (!fish) return;
+        S.coins += entry.value;
+        S.stats.earned += entry.value;
+        S.stats.sold += 1;
+        S.inv.splice(index, 1);
+        Save.save();
+        this.show();
+      },
+      sellAll() {
+        let total = 0;
+        S.inv.forEach((x) => total += x.value);
+        S.coins += total;
+        S.stats.earned += total;
+        S.stats.sold += S.inv.length;
+        S.inv = [];
+        Save.save();
+        this.show();
+      }
+    };
+
+    const Shop = {
+      rods() {
+        UI.open('Rod Shop', `
+          <div class="grid">
+            ${RODS.map((rod) => {
+              const owned = !!S.rods[rod.id];
+              const current = S.rod === rod.id;
+              const lvl = S.rods[rod.id]?.lv || 0;
+              const mult = 1 + lvl * 0.08;
+              return `<div class="card ${current ? 'selected' : ''} ${owned ? '' : 'locked'}">
+                <h3>${rod.name}</h3>
+                <div class="muted">Strength ${Number((rod.strength * mult).toFixed(1))}</div>
+                <div class="muted">Reel ${Number((rod.reel * mult).toFixed(1))}</div>
+                <div class="muted">Control ${Number((rod.control * mult).toFixed(1))}</div>
+                <div class="muted">Cast ${rod.cast}</div>
+                <div class="muted">Price ${rod.price} 🪙</div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                  ${owned ? (current ? '<button class="button success" disabled>Equipped</button>' : `<button class="button success" onclick="Shop.equipRod('${rod.id}')">Equip</button>`) : `<button class="button primary" onclick="Shop.buyRod('${rod.id}')" ${S.coins < rod.price ? 'disabled' : ''}>Buy</button>`}
+                  ${owned && lvl < MAX_ROD_LV ? `<button class="button gold" onclick="Shop.upgradeRod('${rod.id}')" ${S.coins < Math.round(rod.price * 0.5 * (lvl + 1)) ? 'disabled' : ''}>Upgrade +${lvl + 1}</button>` : ''}
+                </div>
+              </div>`;
+            }).join('')}
+          </div>
+        `);
+      },
+      buyRod(id) {
+        const rod = ROD[id];
+        if (!rod || S.rods[id] || S.coins < rod.price) return;
+        S.coins -= rod.price;
+        S.rods[id] = { lv: 0 };
+        S.rod = id;
+        Save.save();
+        this.rods();
+      },
+      equipRod(id) {
+        S.rod = id;
+        Save.save();
+        this.rods();
+      },
+      upgradeRod(id) {
+        const rod = ROD[id];
+        const data = S.rods[id];
+        if (!rod || !data || data.lv >= MAX_ROD_LV) return;
+        const cost = Math.round(rod.price * 0.5 * (data.lv + 1));
+        if (S.coins < cost) return;
+        S.coins -= cost;
+        data.lv += 1;
+        Save.save();
+        this.rods();
+      },
+      reels() {
+        UI.open('Reel Shop', `
+          <div class="grid">
+            ${REELS.map((reel) => {
+              const owned = !!S.reels[reel.id];
+              const current = S.reel === reel.id;
+              return `<div class="card ${current ? 'selected' : ''} ${owned ? '' : 'locked'}"><h3>${reel.name}</h3><div class="muted">Control ${reel.control}x</div><div class="muted">Tension ${reel.tension}x</div><div class="muted">Luck ${reel.luck}x</div><div class="muted">Price ${reel.price} 🪙</div><div style="display:flex;gap:8px;flex-wrap:wrap;">${owned ? (current ? '<button class="button success" disabled>Equipped</button>' : `<button class="button success" onclick="Shop.equipReel('${reel.id}')">Equip</button>`) : `<button class="button primary" onclick="Shop.buyReel('${reel.id}')" ${S.coins < reel.price ? 'disabled' : ''}>Buy</button>`}</div></div>`;
+            }).join('')}
+          </div>
+        `);
+      },
+      buyReel(id) {
+        const reel = REEL[id];
+        if (!reel || S.reels[id] || S.coins < reel.price) return;
+        S.coins -= reel.price;
+        S.reels[id] = 1;
+        S.reel = id;
+        Save.save();
+        this.reels();
+      },
+      equipReel(id) {
+        S.reel = id;
+        Save.save();
+        this.reels();
+      },
+      lures() {
+        UI.open('Lure Shop', `
+          <div class="grid">
+            ${LURES.map((lure) => {
+              const owned = !!S.lures[lure.id];
+              const current = S.lure === lure.id;
+              return `<div class="card ${current ? 'selected' : ''} ${owned ? '' : 'locked'}"><h3>${lure.name}</h3><div class="muted">${lure.desc}</div><div class="muted">${Object.entries(lure.chance || {}).map(([k, v]) => `${k} ×${v}`).join(', ') || 'General'}</div><div class="muted">Price ${lure.price} 🪙</div><div style="display:flex;gap:8px;flex-wrap:wrap;">${owned ? (current ? '<button class="button success" disabled>Equipped</button>' : `<button class="button success" onclick="Shop.equipLure('${lure.id}')">Equip</button>`) : `<button class="button primary" onclick="Shop.buyLure('${lure.id}')" ${S.coins < lure.price ? 'disabled' : ''}>Buy</button>`}</div></div>`;
+            }).join('')}
+          </div>
+        `);
+      },
+      buyLure(id) {
+        const lure = LURE[id];
+        if (!lure || S.lures[id] || S.coins < lure.price) return;
+        S.coins -= lure.price;
+        S.lures[id] = 1;
+        S.lure = id;
+        Save.save();
+        this.lures();
+      },
+      equipLure(id) {
+        S.lure = id;
+        Save.save();
+        this.lures();
+      }
+    };
+
+    const Tournaments = {
+      list: [
+        {id:'coastal', name:'Coastal Cup', goal: 5, reward: 250, condition: (s) => s.total},
+        {id:'freshwater', name:'Freshwater Rush', goal: 8, reward: 420, condition: (s) => Object.values(s.book).filter(Boolean).length},
+        {id:'world', name:'World Tour Finals', goal: 12, reward: 750, condition: (s) => s.unlocked.length},
+        {id:'royal', name:'Royal Catch', goal: 4, reward: 600, condition: (s) => Object.values(s.stats.rar).reduce((a,b) => a + b, 0)}
+      ],
+      open() {
+        UI.open('Tournaments', `
+          <div class="grid">
+            ${this.list.map((t) => {
+              const prog = S.tournaments.progress[t.id] || 0;
+              const done = prog >= t.goal;
+              const label = done ? 'Completed' : `${prog}/${t.goal}`;
+              return `<div class="card ${done ? 'selected' : ''}"><h3>${t.name}</h3><div class="muted">Goal: ${t.goal}</div><div class="muted">Reward: ${t.reward} 🪙</div><div class="bar" style="margin-top:8px"><i style="width:${(prog / t.goal) * 100}%"></i></div><div class="tiny">${label}</div><button class="button ${done ? 'success' : 'primary'}" onclick="Tournaments.start('${t.id}')">${done ? 'Claimed' : 'Join'}</button></div>`;
+            }).join('')}
+          </div>
+        `);
+      },
+      start(id) {
+        const tournament = this.list.find((t) => t.id === id);
+        if (!tournament) return;
+        S.tournaments.active = id;
+        S.tournaments.progress[id] = S.tournaments.progress[id] || 0;
+        UI.toast(`Tournament started: ${tournament.name}`, 'good');
+        this.open();
+      },
+      onCatch(fish, weight) {
+        const id = S.tournaments.active;
+        if (!id) return;
+        const trail = this.list.find((t) => t.id === id);
+        if (!trail) return;
+        S.tournaments.progress[id] = (S.tournaments.progress[id] || 0) + 1;
+        if (S.tournaments.progress[id] >= trail.goal) {
+          S.coins += trail.reward;
+          UI.toast(`Tournament win! +${trail.reward} 🪙`, 'good');
+          S.tournaments.active = null;
+        }
+        Save.save();
+      }
+    };
+
+    const FISH_BY_ID = Object.fromEntries(FISH.map((f) => [f.id, f]));
+
+    const UI = {
+      open(title, html) {
+        $('overlay').classList.add('active');
+        $('overlay').innerHTML = `<div class="panel"><div class="panel-header"><h2>${title}</h2><button class="button danger" onclick="UI.close()">✕</button></div><div class="panel-body">${html}</div></div>`;
+      },
+      close() {
+        $('overlay').innerHTML = '';
+        $('overlay').classList.remove('active');
+        $('modal').innerHTML = '';
+        $('modal').classList.remove('active');
+      },
+      modal(html) {
+        $('modal').classList.add('active');
+        $('modal').innerHTML = html;
+      },
+      toast(text, type = '') {
+        const node = document.createElement('div');
+        node.className = 'toast ' + (type || '');
+        node.textContent = text;
+        $('toastBox').appendChild(node);
+        setTimeout(() => node.remove(), 3200);
+      },
+      hud() {
+        const loc = LOC[S.loc] || LOC.everglades;
+        const env = Weather.now();
+        $('stats').innerHTML = `
+          <span class="chip">🪙 ${S.coins}</span>
+          <span class="chip">📍 ${loc.name}</span>
+          <span class="chip">${env.night ? '🌙' : '☀️'} ${env.weather}</span>
+          <span class="chip">🌡 ${loc.temp}°C</span>
+        `;
+      },
+      catchCard(fish, weight, value, isNew) {
+        const c = RARITIES[fish.rarity].color;
+        const big = RARITY_ORDER.indexOf(fish.rarity) >= 4;
+        $('modal').classList.add('active');
+        $('modal').innerHTML = `<div class="modal-box ${big ? 'legend' : ''}" style="border-color:${c};box-shadow:0 0 18px ${c};"><img src="${FishArt.url(fish)}"/><h2>${fish.name}</h2><div class="tag" style="background:${c}">${fish.rarity.toUpperCase()}${isNew ? ' · NEW' : ''}</div><div class="muted">Weight: ${weight.toFixed(2)}kg</div><div class="muted">Value: ${value} 🪙</div><button class="button success" onclick="UI.close(); Fishing.reset(); UI.hud();">Continue</button></div>`;
+      }
+    };
+
+    const Snd = {
+      ctx: null,
+      musicTimer: null,
+      init() {
+        if (this.ctx) {
+          if (this.ctx.state === 'suspended') this.ctx.resume();
+          return;
+        }
+        try {
+          this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (e) {}
+      },
+      tone(freq, duration, type = 'sine', volume = 0.06, when = 0) {
+        if (!this.ctx || !S.settings.sfx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime + when);
+        gain.gain.setValueAtTime(0.0001, this.ctx.currentTime + when);
+        gain.gain.exponentialRampToValueAtTime(volume, this.ctx.currentTime + when + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + when + duration);
+        osc.connect(gain).connect(this.ctx.destination);
+        osc.start(this.ctx.currentTime + when);
+        osc.stop(this.ctx.currentTime + when + duration);
+      },
+      sfx(name) {
+        if (!S.settings.sfx) return;
+        const t = (f, d, type, v, at) => this.tone(f, d, type, v, at);
+        const sounds = {
+          cast: () => { t(440, 0.12, 'triangle', 0.05, 0); t(260, 0.18, 'sine', 0.04, 0.05); },
+          bite: () => { t(850, 0.18, 'square', 0.06, 0); t(680, 0.16, 'square', 0.05, 0.04); },
+          ring: () => { t(700, 0.12, 'triangle', 0.06, 0); },
+          lose: () => { t(200, 0.3, 'sawtooth', 0.06, 0); },
+          catch: () => { t(660, 0.1, 'triangle', 0.06, 0); t(800, 0.12, 'triangle', 0.06, 0.06); },
+          legend: () => { t(880, 0.1, 'triangle', 0.08, 0); t(990, 0.13, 'triangle', 0.08, 0.08); t(1170, 0.18, 'triangle', 0.08, 0.16); },
+          bad: () => { t(120, 0.12, 'sawtooth', 0.04, 0); }
+        };
+        (sounds[name] || sounds.cast)();
+      }
+    };
+
+    function RodsIndex() {
+      const arr = RODS.map((r) => r.id);
+      return arr.indexOf(S.rod);
+    }
+
+    const Game = {
+      init() {
+        const canvas = $('game');
+        cv = canvas;
+        cx = cv.getContext('2d');
+        if (!S.rods[S.rod]) S.rod = 'starter';
+        if (!S.reels[S.reel]) S.reel = 'basic';
+        if (!S.lures[S.lure]) S.lure = 'worm';
+        if (!S.stats.cont) S.stats.cont = {};
+        S.stats.cont[LOC[S.loc].continent] = 1;
+
+        const resize = () => {
+          const w = Math.max(600, Math.min(1200, window.innerWidth));
+          cv.width = w;
+          cv.height = 540;
+        };
+        window.addEventListener('resize', resize);
+        resize();
+
+        $('nav').innerHTML = [
+          ['🗺️ Map', () => Game.map()],
+          ['🎣 Rods', () => Shop.rods()],
+          ['🌀 Reels', () => Shop.reels()],
+          ['🪱 Lures', () => Shop.lures()],
+          ['🎒 Bag', () => Inv.show()],
+          ['📖 Book', () => Inv.book()],
+          ['🏆 Tourney', () => Tournaments.open()],
+          ['📊 Goals', () => Ach.statsWindow()],
+          ['⚙️ Settings', () => Game.settings()],
+          ['❔ Help', () => Game.help()]
+        ].map(([label, fn], i) => `<button class="button" data-i="${i}" onclick="UI.nav(${i})">${label}</button>`).join('');
+
+        UI.nav = (idx) => {
+          if (Fishing.state === 'result' && $('modal').classList.contains('active')) return;
+          if (Fishing.state !== 'idle') Fishing.reset();
+          const actions = [
+            () => Game.map(),
+            () => Shop.rods(),
+            () => Shop.reels(),
+            () => Shop.lures(),
+            () => Inv.show(),
+            () => Inv.book(),
+            () => Tournaments.open(),
+            () => Ach.statsWindow(),
+            () => Game.settings(),
+            () => Game.help()
+          ];
+          actions[idx]?.();
+        };
+
+        document.addEventListener('keydown', (e) => {
+          if (e.code === 'Space') {
+            if ($('overlay').classList.contains('active')) return;
+            e.preventDefault();
+            if (!e.repeat) {
+              if (Fishing.state === 'idle') Fishing.cast();
+              else if (Fishing.state === 'waiting') Fishing.reset();
+              else if (Fishing.state === 'bite') Fishing.triggerHook();
+              else if (Fishing.state === 'battle') Fishing.tryCatch();
+            }
+          }
+        });
+
+        $('fishBtn').addEventListener('pointerdown', (e) => {
+          e.preventDefault();
+          $('fishBtn').classList.add('on');
+          if ($('overlay').classList.contains('active')) return;
+          if (Fishing.state === 'idle') Fishing.cast();
+          else if (Fishing.state === 'waiting') Fishing.reset();
+          else if (Fishing.state === 'bite') Fishing.triggerHook();
+          else if (Fishing.state === 'battle') Fishing.tryCatch();
+        });
+        $('fishBtn').addEventListener('pointerup', () => $('fishBtn').classList.remove('on'));
+        $('fishBtn').addEventListener('pointerleave', () => $('fishBtn').classList.remove('on'));
+
+        Snd.init();
+        Weather.roll();
+        Ach.today();
+        UI.hud();
+        UI.open('World Fishing Adventures', `
+          <div style="text-align:center;padding:20px 10px;">
+            <h1 style="font-size:clamp(32px,7vw,56px);margin:0;color:#ffd76a;text-shadow:0 4px 0 #9f5a00;">World Fishing Adventures</h1>
+            <p style="color:#dfeeff;max-width:560px;margin:12px auto 18px;">Travel the world, catch new species, buy better rods and reels, and compete in tournaments.</p>
+            <button class="button primary" onclick="UI.close();">Start fishing</button>
+          </div>
+        `);
+
+        let last = performance.now();
+        const loop = (now) => {
+          const dt = Math.min(0.05, (now - last) / 1000);
+          last = now;
+          Fishing.update(dt);
+          Rendering.draw();
+          $('#hint').textContent = Fishing.message;
+          requestAnimationFrame(loop);
+        };
+        requestAnimationFrame(loop);
+      },
+      map() {
+        UI.open('World Map', `
+          ${CONTS.map((cont) => `<div style="margin-bottom:12px"><h3>${cont}</h3><div class="grid">${LOCS.filter((l) => l.continent === cont).map((loc) => {
+            const unlocked = S.unlocked.includes(loc.id);
+            const selected = S.loc === loc.id;
+            return `<div class="card ${selected ? 'selected' : ''} ${unlocked ? '' : 'locked'}" style="background:linear-gradient(135deg,${loc.waterTop}55,${loc.skyTop}88);">
+              <h4>${loc.name}</h4>
+              <div class="muted">${loc.sea ? 'Sea' : 'Freshwater'} · ${loc.temp}°C</div>
+              <div class="muted">Need ${loc.req} catches</div>
+              <button class="button ${unlocked ? 'success' : 'disabled'}" ${!unlocked ? 'disabled' : ''} onclick="Game.travel('${loc.id}')">${selected ? 'Current' : unlocked ? 'Travel' : 'Locked'}</button>
+            </div>`;
+          }).join('')}</div></div>`).join('')}
+        `);
+      },
+      travel(id) {
+        if (!S.unlocked.includes(id)) return;
+        S.loc = id;
+        S.stats.cont[LOC[id].continent] = 1;
+        Weather.roll();
+        Fishing.reset();
+        UI.close();
+        UI.hud();
+        Save.save();
+      },
+      checkUnlocks() {
+        for (const loc of LOCS) {
+          if (S.total >= loc.req && !S.unlocked.includes(loc.id)) {
+            S.unlocked.push(loc.id);
+            UI.toast(`🌍 ${loc.name} unlocked`, 'good');
+          }
+        }
+      },
+      settings() {
+        const s = S.settings;
+        UI.open('Settings', `
+          <div class="grid">
+            <div class="card"><h3>Audio</h3><div class="muted">SFX</div><input type="checkbox" ${s.sfx ? 'checked' : ''} onchange="S.settings.sfx=this.checked;Save.save()"/><div class="muted">Music</div><input type="checkbox" ${s.music ? 'checked' : ''} onchange="S.settings.music=this.checked;Save.save()"/>
+            <div class="muted">Volume</div><input type="range" min="0" max="1" step="0.05" value="${s.vol}" onchange="S.settings.vol=Number(this.value);Save.save()" /></div>
+            <div class="card"><h3>Season</h3><select onchange="S.settings.season=this.value;Save.save();UI.hud();">${['auto','spring','summer','autumn','winter'].map((v) => `<option value="${v}" ${s.season === v ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
+            <div class="card"><h3>Save</h3><button class="button primary" onclick="Save.download && Save.download()">Download save</button><textarea id="saveImport" rows="4" style="width:100%;margin-top:8px;border-radius:8px;padding:8px;background:#0d1a2c;color:white;border:1px solid #335;">Paste JSON here</textarea><button class="button success" onclick="Save.import(document.getElementById('saveImport').value);">Import</button></div>
+            <div class="card"><h3>Danger zone</h3><button class="button danger" onclick="if(confirm('Erase all progress?')) Save.reset()">Erase save</button></div>
+          </div>
+        `);
+      },
+      help() {
+        UI.open('How to play', `
+          <div class="card"><h3>Controls</h3><p class="muted">1. Tap or press FISH to cast.</p><p class="muted">2. Wait 1–3 seconds for a bite.</p><p class="muted">3. Press SPACE when the line is in the green area.</p><p class="muted">4. Better rods and reels make the green zone easier to hit.</p><p class="muted">5. Fish habits depend on location, season, weather, and time of day.</p></div>
+        `);
+      }
+    };
+
+    const Rendering = {
+      draw() {
+        const c = cx;
+        const W = cv.width;
+        const H = cv.height;
+        const env = Weather.now();
+        const loc = LOC[S.loc] || LOC.everglades;
+        c.clearRect(0, 0, W, H);
+
+        const sky = c.createLinearGradient(0, 0, 0, H);
+        sky.addColorStop(0, loc.skyTop);
+        sky.addColorStop(1, loc.skyBottom);
+        c.fillStyle = sky;
+        c.fillRect(0, 0, W, H);
+
+        const sunX = (W * ((S.clock + 0.18) % 1)) || 80;
+        const sunY = 100 + Math.sin(S.clock * Math.PI * 2) * 22;
+        c.fillStyle = env.night ? 'rgba(13,26,52,0.6)' : 'rgba(255,255,255,0.18)';
+        c.beginPath(); c.arc(sunX, sunY, 28, 0, Math.PI * 2); c.fill();
+
+        // Water
+        c.fillStyle = loc.waterTop;
+        c.fillRect(0, 250, W, H - 250);
+        c.fillStyle = loc.waterBottom;
+        c.fillRect(0, 300, W, H - 300);
+
+        // ripples/waves
+        c.strokeStyle = 'rgba(255,255,255,0.10)';
+        c.lineWidth = 2;
+        for (let i = 0; i < 12; i++) {
+          const offset = (i * 70 + S.clock * 180) % (W + 100) - 60;
+          c.beginPath();
+          c.moveTo(offset, 265 + i * 14);
+          for (let x = 0; x < 18; x++) {
+            const px = offset + x * 16;
+            const py = 265 + i * 14 + Math.sin(x * 0.8 + S.clock * 10 + i) * 7;
+            c.lineTo(px, py);
+          }
+          c.stroke();
+        }
+
+        // ambient fish
+        const ambient = FISH.filter((f) => f.location === S.loc).slice(0, 9);
+        ambient.forEach((fish, i) => {
+          const x = ((i * 115 + S.clock * 120) % (W + 120)) - 50;
+          const y = 260 + ((i % 4) * 25) + Math.sin(S.clock * 4 + i) * 6;
+          const img = new Image();
+          img.src = FishArt.url(fish);
+          c.globalAlpha = 0.34;
+          c.drawImage(img, x, y, 70, 28);
+          c.globalAlpha = 1;
+        });
+
+        // dock and fisherman
+        c.fillStyle = '#6d4424';
+        c.fillRect(0, 315, 170, 14);
+        for (let x = 25; x < 165; x += 52) c.fillRect(x, 328, 10, 72);
+        c.strokeStyle = '#e8c39a';
+        c.lineWidth = 8;
+        c.beginPath(); c.moveTo(108, 307); c.lineTo(108, 244); c.stroke();
+        c.fillStyle = '#f2cf9e';
+        c.beginPath(); c.arc(108, 232, 14, 0, Math.PI * 2); c.fill();
+        c.fillStyle = '#d94747';
+        c.fillRect(96, 244, 24, 18);
+
+        const rodColor = `hsl(${(RodsIndex() || 0) * 38 + 26} 70% 58%)`;
+        c.strokeStyle = rodColor;
+        c.lineWidth = 4;
+        c.beginPath(); c.moveTo(112, 244); c.quadraticCurveTo(150, 180, 160, 208); c.stroke();
+
+        if (Fishing.state === 'waiting' || Fishing.state === 'bite' || Fishing.state === 'battle') {
+          const center = 0.5 + Math.sin(Fishing.battleTime * (2.3 + Fishing.fish.speed * 0.18)) * 0.38;
+          const x = 160 + center * 170;
+          const y = 208 + (Fishing.state === 'battle' ? 80 : 65);
+          c.strokeStyle = 'rgba(255,255,255,0.8)';
+          c.lineWidth = 2;
+          c.beginPath(); c.moveTo(160, 208); c.lineTo(x, y); c.stroke();
+          c.fillStyle = '#f6fbff';
+          c.fillRect(x - 4, y - 10, 8, 20);
+
+          if (Fishing.state === 'battle') {
+            const zoneX = 160 + center * 170;
+            const zoneW = 86;
+            const zoneL = zoneX - zoneW / 2;
+            const zoneR = zoneX + zoneW / 2;
+            c.fillStyle = 'rgba(87,255,153,0.2)';
+            c.fillRect(zoneL, 130, zoneW, 26);
+            c.strokeStyle = '#6bff98';
+            c.strokeRect(zoneL, 130, zoneW, 26);
+          }
+        }
+
+        if (Fishing.state === 'battle') {
+          const boxX = W * 0.5 - 155;
+          const boxY = 40;
+          c.fillStyle = 'rgba(0,0,0,0.36)';
+          c.fillRect(boxX - 10, boxY - 18, 340, 74);
+          c.fillStyle = '#f4fbff';
+          c.font = 'bold 12px sans-serif';
+          c.fillText('TENSION', boxX, boxY + 6);
+          c.fillText('FIGHT', boxX + 200, boxY + 6);
+          c.fillStyle = '#f4f4f4';
+          c.fillRect(boxX, boxY + 18, 340, 12);
+          c.fillRect(boxX + 200, boxY + 18, 120, 12);
+          c.fillStyle = Fishing.tension > 70 ? '#ff5a5a' : '#ffd166';
+          c.fillRect(boxX, boxY + 18, 340 * (Fishing.tension / 100), 12);
+          c.fillStyle = '#6ee7ff';
+          c.fillRect(boxX + 200, boxY + 18, 120 * (Fishing.progress / Fishing.goal), 12);
+        }
+      }
+    };
+
+    function init() {
+      Game.init();
+      if (!S.unlocked.includes(S.loc)) S.unlocked.push(S.loc);
+      Game.checkUnlocks();
+      Save.save();
+    }
+
+    window.addEventListener('load', init);
+  </script>
+</body>
+</html>
