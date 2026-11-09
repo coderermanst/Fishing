@@ -1,19 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
 <title>World Fishing Adventures</title>
 <style>
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0b1530;color:#fff;font:15px system-ui, sans-serif;user-select:none}#c{position:fixed;inset:0;width:100%;height:100%;touch-action:none}#hud{position:fixed;z-index:2;inset:0 0 auto;display:flex;justify-content:space-between;gap:8px;padding:8px;pointer-events:none}#stats,#nav{display:flex;gap:6px;flex-wrap:wrap;pointer-events:auto}.chip{padding:6px 10px;border:1px solid #ffffff44;border-radius:10px;background:#0b1a3acc;font-weight:700}button,select{font:inherit;color:#fff;background:linear-gradient(#2f86e8,#1b57b0);border:0;border-radius:9px;padding:8px 12px;font-weight:700;cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}.gold{background:linear-gradient(#ffc83d,#d98a00);color:#251900}.green{background:linear-gradient(#3cc46a,#1b8a45)}.red{background:linear-gradient(#e85454,#a52323)}#hint{position:fixed;z-index:2;bottom:18px;left:50%;transform:translateX(-50%);padding:8px 14px;border-radius:22px;background:#0b1a3add;font-weight:700;text-align:center;max-width:80vw}#fishBtn{position:fixed;z-index:2;right:18px;bottom:55px;width:100px;height:100px;border-radius:50%;font-size:18px;background:radial-gradient(#ff9a4d,#d8431a);box-shadow:0 6px 0 #8a2a10}#overlay{position:fixed;z-index:5;inset:0;display:none;align-items:center;justify-content:center;padding:10px;background:#050c22bb}#overlay.open{display:flex}.panel{width:min(850px,100%);max-height:90vh;overflow:auto;background:linear-gradient(#17325f,#0e1f40);border:2px solid #5b8fd8;border-radius:16px;padding:14px;box-shadow:0 10px 40px #000a}.panelhead{display:flex;align-items:center;justify-content:space-between;gap:8px;border-bottom:1px solid #ffffff33;padding-bottom:8px}.panel h2{margin:0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin-top:12px}.card{padding:12px;border:1px solid #496da4;border-radius:12px;background:#09172e}.card h3{margin:0 0 6px}.small{font-size:12px;opacity:.82}.bar{height:12px;border-radius:8px;background:#ffffff33;overflow:hidden}.bar i{display:block;height:100%;background:#56c8ff}#toast{position:fixed;z-index:8;top:66px;left:50%;transform:translateX(-50%);background:#10244a;border:2px solid #ffc83d;border-radius:10px;padding:9px 14px;display:none;font-weight:700}select{width:100%;margin:7px 0;background:#17325f}@media(max-width:700px){#fishBtn{width:84px;height:84px;right:12px;bottom:55px}.chip{font-size:12px;padding:5px 7px}#nav button{font-size:12px;padding:6px}}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0b1530;color:#fff;font:15px system-ui,sans-serif;user-select:none}#c{position:fixed;inset:0;width:100%;height:100%;touch-action:manipulation}#hud{position:fixed;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;pointer-events:none}#stats,#nav{display:flex;flex-wrap:wrap;gap:7px;pointer-events:auto}.chip,.navbtn{border:1px solid #ffffff35;background:#07152ddd;color:#fff;border-radius:12px;padding:8px 11px;box-shadow:0 3px 12px #0003}.navbtn,button{font:inherit;cursor:pointer}.navbtn:hover,button:hover{filter:brightness(1.13)}#hint{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#07152ddd;padding:10px 15px;border-radius:12px;text-align:center;max-width:90%;pointer-events:none}#fishBtn{position:fixed;right:18px;bottom:65px;border:0;border-radius:50%;width:76px;height:76px;background:#20b9c5;color:#062338;font-weight:800;box-shadow:0 5px 18px #0005}#overlay{position:fixed;inset:0;background:#0009;display:none;align-items:center;justify-content:center;padding:16px}#overlay.open{display:flex}.panel{width:min(720px,100%);max-height:85vh;overflow:auto;background:#102344;border:1px solid #ffffff35;border-radius:18px;padding:18px;box-shadow:0 10px 40px #0008}.panelhead{display:flex;justify-content:space-between;align-items:center;gap:12px}.panelhead h2{margin:0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-top:12px}.card{background:#ffffff0d;border:1px solid #ffffff20;border-radius:12px;padding:12px}.card h3{margin:0 0 6px}.card button,.panelhead button{border:0;border-radius:8px;padding:8px 11px;margin-top:9px;color:white}.green{background:#258455}.blue{background:#2769a8}.red{background:#a93e4b}button:disabled{opacity:.5;cursor:not-allowed}select{font:inherit;background:#18365d;color:white;border:1px solid #ffffff40;border-radius:7px;padding:7px}label{display:block;margin:12px 0 5px}#toast{display:none;position:fixed;left:50%;top:75px;transform:translateX(-50%);padding:10px 16px;background:#07152eee;border:1px solid #ffffff35;border-radius:12px;z-index:3}@media(max-width:600px){#hud{flex-direction:column}.chip,.navbtn{padding:7px 9px;font-size:13px}#hint{bottom:12px;font-size:13px}#fishBtn{bottom:56px}}
 </style>
 </head>
 <body>
-<canvas id="c"></canvas><div id="hud"><div id="stats"></div><div id="nav"></div></div><div id="hint"></div><button id="fishBtn">🎣<br>FISH</button><div id="overlay"></div><div id="toast"></div>
+<canvas id="c"></canvas>
+<div id="hud"><div id="stats"></div><div id="nav"></div></div>
+<div id="hint"></div><button id="fishBtn" aria-label="Cast or reel in">🎣<br>FISH</button>
+<div id="overlay"></div><div id="toast"></div>
 <script>
 'use strict';
-// ADDING FISH: copy an object in FISH and edit its fields. loc must match a location id below;
-// rarity is common/uncommon/rare/epic/legendary. temp is a Celsius range; season and weather are optional.
-// difficulty 1–5 sets how many green-zone hits are needed. Lower is easier. Leave optional fields out for any conditions.
+
+// ADDING FISH: copy a fish object below and change its fields.
+// Required: name, loc (a location id below), rarity, weight [min,max], difficulty (1–5).
+// Optional filters: temp [min,max] in °C, season ('spring'/'summer'/'autumn'/'winter'), weather ('clear'/'cloudy'/'rain'/'snow').
+// Omit a filter if the fish can appear in any conditions. Every location should have at least one easy fish.
 const LOCATIONS=[
  {id:'everglades',name:'Florida Everglades',continent:'North America',temp:27,weather:['clear','cloudy','rain'],color:'#3b8a5a'},
  {id:'greatlakes',name:'Great Lakes',continent:'North America',temp:12,weather:['clear','cloudy','rain'],color:'#2d6fb5'},
@@ -26,82 +32,101 @@ const LOCATIONS=[
  {id:'reef',name:'Great Barrier Reef',continent:'Oceania',temp:25,weather:['clear','cloudy','rain'],color:'#20b9c5'},
  {id:'antarctic',name:'Antarctic Waters',continent:'Antarctica',temp:-2,weather:['clear','cloudy','snow'],color:'#5ab0d0'}
 ];
-// Add fish here. temp:[min,max], weather:'rain' or season:'winter' can limit when it appears.
+// Fish are selected only when their location and all specified conditions match.
 const FISH=[
  {name:'Bluegill',loc:'everglades',rarity:'common',weight:[.1,.6],difficulty:1,temp:[15,35]},
- {name:'Largemouth Bass',loc:'everglades',rarity:'uncommon',weight:[1,6],difficulty:2,temp:[15,32],weather:'rain'},
- {name:'Alligator Gar',loc:'everglades',rarity:'rare',weight:[8,70],difficulty:3,temp:[20,35],season:'summer'},
- {name:'Yellow Perch',loc:'greatlakes',rarity:'common',weight:[.1,.9],difficulty:1,temp:[0,25]},
- {name:'Lake Trout',loc:'greatlakes',rarity:'uncommon',weight:[2,20],difficulty:2,temp:[0,16],season:'winter'},
- {name:'Muskellunge',loc:'greatlakes',rarity:'epic',weight:[6,30],difficulty:4,temp:[8,22],season:'autumn'},
- {name:'Red-Bellied Piranha',loc:'amazon',rarity:'common',weight:[.3,1.5],difficulty:1,temp:[20,35]},
- {name:'Tambaqui',loc:'amazon',rarity:'uncommon',weight:[5,30],difficulty:2,temp:[22,35],weather:'rain'},
- {name:'Arapaima',loc:'amazon',rarity:'epic',weight:[50,200],difficulty:5,temp:[24,35],season:'summer'},
- {name:'Yellowtail Snapper',loc:'caribbean',rarity:'common',weight:[.5,4],difficulty:1,temp:[20,35]},
- {name:'Mahi-Mahi',loc:'caribbean',rarity:'uncommon',weight:[4,20],difficulty:2,temp:[22,35],season:'summer'},
- {name:'Blue Marlin',loc:'caribbean',rarity:'legendary',weight:[100,450],difficulty:5,temp:[23,35]},
- {name:'Sardine',loc:'mediterranean',rarity:'common',weight:[.05,.2],difficulty:1,temp:[10,30]},
- {name:'Gilt-head Bream',loc:'mediterranean',rarity:'uncommon',weight:[1,6],difficulty:2,temp:[14,30]},
- {name:'Bluefin Tuna',loc:'mediterranean',rarity:'epic',weight:[100,400],difficulty:4,temp:[15,27],season:'summer'},
- {name:'Atlantic Cod',loc:'fjords',rarity:'common',weight:[2,15],difficulty:1,temp:[-2,15]},
- {name:'Arctic Char',loc:'fjords',rarity:'uncommon',weight:[1,9],difficulty:2,temp:[-2,12],season:'winter'},
- {name:'Kraken Pup Anglerfish',loc:'fjords',rarity:'legendary',weight:[5,30],difficulty:5,temp:[-2,8],weather:'snow'},
- {name:'Nile Tilapia',loc:'nile',rarity:'common',weight:[.3,3],difficulty:1,temp:[18,38]},
- {name:'Tigerfish',loc:'nile',rarity:'uncommon',weight:[2,15],difficulty:2,temp:[20,38],weather:'rain'},
- {name:'Nile Perch',loc:'nile',rarity:'epic',weight:[20,150],difficulty:4,temp:[22,38],season:'summer'},
- {name:'Horse Mackerel',loc:'japan',rarity:'common',weight:[.1,.7],difficulty:1,temp:[8,28]},
- {name:'Tai Red Seabream',loc:'japan',rarity:'uncommon',weight:[1,9],difficulty:2,temp:[10,28]},
- {name:'Oarfish',loc:'japan',rarity:'legendary',weight:[50,300],difficulty:5,temp:[8,22],season:'winter'},
- {name:'Clownfish',loc:'reef',rarity:'common',weight:[.05,.2],difficulty:1,temp:[20,34]},
- {name:'Coral Trout',loc:'reef',rarity:'uncommon',weight:[2,12],difficulty:2,temp:[20,32],weather:'clear'},
- {name:'Rainbow Dreamfish',loc:'reef',rarity:'epic',weight:[.5,3],difficulty:4,temp:[22,32],season:'spring'},
- {name:'Icefish',loc:'antarctic',rarity:'common',weight:[.2,1],difficulty:1,temp:[-10,5]},
- {name:'Antarctic Toothfish',loc:'antarctic',rarity:'uncommon',weight:[20,120],difficulty:2,temp:[-8,3]},
- {name:'Crystal Ghostfish',loc:'antarctic',rarity:'legendary',weight:[1,6],difficulty:5,temp:[-8,2],weather:'snow',season:'winter'}
+ {name:'Largemouth Bass',loc:'everglades',rarity:'uncommon',weight:[1,6],difficulty:2,temp:[15,38],weather:'rain'},
+ {name:'Alligator Gar',loc:'everglades',rarity:'rare',weight:[8,70],difficulty:3,temp:[20,40],season:'summer'},
+ {name:'Yellow Perch',loc:'greatlakes',rarity:'common',weight:[.1,.9],difficulty:1,temp:[-2,25]},
+ {name:'Lake Trout',loc:'greatlakes',rarity:'uncommon',weight:[2,20],difficulty:2,temp:[-5,16],season:'winter'},
+ {name:'Muskellunge',loc:'greatlakes',rarity:'epic',weight:[6,30],difficulty:4,temp:[6,25],season:'autumn'},
+ {name:'Red-Bellied Piranha',loc:'amazon',rarity:'common',weight:[.3,1.5],difficulty:1,temp:[15,40]},
+ {name:'Tambaqui',loc:'amazon',rarity:'uncommon',weight:[5,30],difficulty:2,temp:[20,40],weather:'rain'},
+ {name:'Arapaima',loc:'amazon',rarity:'epic',weight:[50,200],difficulty:5,temp:[20,42],season:'summer'},
+ {name:'Yellowtail Snapper',loc:'caribbean',rarity:'common',weight:[.5,4],difficulty:1,temp:[15,40]},
+ {name:'Mahi-Mahi',loc:'caribbean',rarity:'uncommon',weight:[4,20],difficulty:2,temp:[20,40],season:'summer'},
+ {name:'Blue Marlin',loc:'caribbean',rarity:'legendary',weight:[100,450],difficulty:5,temp:[20,40]},
+ {name:'Sardine',loc:'mediterranean',rarity:'common',weight:[.05,.2],difficulty:1,temp:[5,35]},
+ {name:'Gilt-head Bream',loc:'mediterranean',rarity:'uncommon',weight:[1,6],difficulty:2,temp:[10,35]},
+ {name:'Bluefin Tuna',loc:'mediterranean',rarity:'epic',weight:[100,400],difficulty:4,temp:[12,35],season:'summer'},
+ {name:'Atlantic Cod',loc:'fjords',rarity:'common',weight:[2,15],difficulty:1,temp:[-15,20]},
+ {name:'Arctic Char',loc:'fjords',rarity:'uncommon',weight:[1,9],difficulty:2,temp:[-15,15],season:'winter'},
+ {name:'Kraken Pup Anglerfish',loc:'fjords',rarity:'legendary',weight:[5,30],difficulty:5,temp:[-10,15],weather:'snow'},
+ {name:'Nile Tilapia',loc:'nile',rarity:'common',weight:[.3,3],difficulty:1,temp:[15,45]},
+ {name:'Tigerfish',loc:'nile',rarity:'uncommon',weight:[2,15],difficulty:2,temp:[18,45],weather:'rain'},
+ {name:'Nile Perch',loc:'nile',rarity:'epic',weight:[20,150],difficulty:4,temp:[20,45],season:'summer'},
+ {name:'Horse Mackerel',loc:'japan',rarity:'common',weight:[.1,.7],difficulty:1,temp:[0,35]},
+ {name:'Tai Red Seabream',loc:'japan',rarity:'uncommon',weight:[1,9],difficulty:2,temp:[5,35]},
+ {name:'Oarfish',loc:'japan',rarity:'legendary',weight:[50,300],difficulty:5,temp:[0,30],season:'winter'},
+ {name:'Clownfish',loc:'reef',rarity:'common',weight:[.05,.2],difficulty:1,temp:[15,40]},
+ {name:'Coral Trout',loc:'reef',rarity:'uncommon',weight:[2,12],difficulty:2,temp:[18,40],weather:'clear'},
+ {name:'Rainbow Dreamfish',loc:'reef',rarity:'epic',weight:[.5,3],difficulty:4,temp:[20,40],season:'spring'},
+ {name:'Icefish',loc:'antarctic',rarity:'common',weight:[.2,1],difficulty:1,temp:[-20,8]},
+ {name:'Antarctic Toothfish',loc:'antarctic',rarity:'uncommon',weight:[20,120],difficulty:2,temp:[-20,5]},
+ {name:'Crystal Ghostfish',loc:'antarctic',rarity:'legendary',weight:[1,6],difficulty:5,temp:[-20,5],weather:'snow',season:'winter'}
 ];
-const RARITY={common:'#c5d0da',uncommon:'#5cc46a',rare:'#4aa3ff',epic:'#b05cff',legendary:'#ffb020};
-const RODS=[{id:'starter',name:'Starter Rod',cost:0,help:0},{id:'fiberglass',name:'Fibreglass Rod',cost:180,help:1},{id:'carbon',name:'Carbon Rod',cost:650,help:2},{id:'pro',name:'Pro Rod',cost:1800,help:3}];
-// Reels widen the green timing target and make accurate presses more forgiving.
-const REELS=[{id:'basic',name:'Basic Reel',cost:0,help:0},{id:'smooth',name:'Smooth Reel',cost:120,help:1},{id:'precision',name:'Precision Reel',cost:500,help:2},{id:'master',name:'Master Reel',cost:1400,help:3}];
+const RARITY={common:'#c5d0da',uncommon:'#5cc46a',rare:'#4aa3ff',epic:'#b05cff',legendary:'#ffb020'};
+// Rods and reels improve the timing zone and reduce the number of successful presses required.
+const RODS=[
+ {id:'starter',name:'Starter Rod',cost:0,help:0},{id:'fiberglass',name:'Fibreglass Rod',cost:180,help:1},
+ {id:'carbon',name:'Carbon Rod',cost:650,help:2},{id:'pro',name:'Pro Rod',cost:1800,help:3}
+];
+const REELS=[
+ {id:'basic',name:'Basic Reel',cost:0,help:0},{id:'smooth',name:'Smooth Reel',cost:120,help:1},
+ {id:'precision',name:'Precision Reel',cost:500,help:2},{id:'master',name:'Master Reel',cost:1400,help:3}
+];
 const SEASONS=['spring','summer','autumn','winter'];
 const $=id=>document.getElementById(id),canvas=$('c'),ctx=canvas.getContext('2d');
 const saved=(()=>{try{return JSON.parse(localStorage.getItem('wfa_easy_v2'))||{}}catch{return{}}})();
 const S=Object.assign({coins:60,loc:'everglades',season:'spring',rod:'starter',reel:'basic',ownedRods:['starter'],ownedReels:['basic'],total:0,inventory:[]},saved);
-let state='idle',clock=0,castT=0,biteAt=0,fish=null,fishWeight=0,marker=0,markerDir=1,target=.5,targetDir=1,hits=0,misses=0,needed=1,weather='clear',temp=20,toastTimer=0;
-const loc=()=>LOCATIONS.find(x=>x.id===S.loc)||LOCATIONS[0], gear=()=>({rod:RODS.find(x=>x.id===S.rod)||RODS[0],reel:REELS.find(x=>x.id===S.reel)||REELS[0]});
+// Repair old or partial saves so one bad value cannot prevent fishing.
+if(!LOCATIONS.some(x=>x.id===S.loc))S.loc='everglades';
+if(!SEASONS.includes(S.season)&&S.season!=='auto')S.season='spring';
+if(!Array.isArray(S.ownedRods))S.ownedRods=['starter'];if(!Array.isArray(S.ownedReels))S.ownedReels=['basic'];
+if(!RODS.some(x=>x.id===S.rod)||!S.ownedRods.includes(S.rod))S.rod='starter';
+if(!REELS.some(x=>x.id===S.reel)||!S.ownedReels.includes(S.reel))S.reel='basic';
+if(!Array.isArray(S.inventory))S.inventory=[];
+let state='idle',clock=0,castT=0,biteAt=0,fish=null,fishWeight=0,marker=0,markerDir=1,hits=0,misses=0,needed=1,weather='clear',toastTimer=0;
+const loc=()=>LOCATIONS.find(x=>x.id===S.loc)||LOCATIONS[0];
+const gear=()=>({rod:RODS.find(x=>x.id===S.rod)||RODS[0],reel:REELS.find(x=>x.id===S.reel)||REELS[0]});
 function save(){try{localStorage.setItem('wfa_easy_v2',JSON.stringify(S))}catch{}}
-function notify(msg){const t=$('toast');t.textContent=msg;t.style.display='block';clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.style.display='none',2200)}
-function environment(){const l=loc(),season=S.season==='auto'?SEASONS[Math.floor((clock/90)%4)]:S.season;temp=l.temp+({spring:0,summer:8,autumn:-2,winter:-10}[season]||0)+(weather==='rain'?-2:weather==='snow'?-7:0);return{season,temp,weather}}
-function eligibleFish(){const e=environment(),pool=FISH.filter(f=>f.loc===S.loc&&(!f.season||f.season===e.season)&&(!f.weather||f.weather===e.weather)&&(!f.temp||(e.temp>=f.temp[0]&&e.temp<=f.temp[1])));return pool.length?pool:FISH.filter(f=>f.loc===S.loc&&!f.season&&!f.weather)}
-function chooseFish(){const pool=eligibleFish();if(!pool.length)return FISH[0];const weights=pool.map(f=>({f,w:({common:60,uncommon:25,rare:9,epic:3,legendary:1}[f.rarity]||1)}));let r=Math.random()*weights.reduce((a,x)=>a+x.w,0);for(const x of weights){r-=x.w;if(r<=0)return x.f}return weights[0].f}
+function notify(msg){const t=$('toast');t.textContent=msg;t.style.display='block';clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.style.display='none',2300)}
+function environment(){const l=loc(),season=S.season==='auto'?SEASONS[Math.floor((clock/90)%4)]:S.season;const shift={spring:0,summer:8,autumn:-2,winter:-10}[season];const temp=l.temp+shift+(weather==='rain'?-2:weather==='snow'?-5:0);return{season,temp,weather}}
+function eligibleFish(){const e=environment();return FISH.filter(f=>f.loc===S.loc&&(!f.season||f.season===e.season)&&(!f.weather||f.weather===e.weather)&&(!f.temp||(e.temp>=f.temp[0]&&e.temp<=f.temp[1])))}
+function chooseFish(){const pool=eligibleFish();if(!pool.length)return null;const weights=pool.map(f=>({f,w:({common:60,uncommon:25,rare:9,epic:3,legendary:1}[f.rarity]||1)}));let r=Math.random()*weights.reduce((n,x)=>n+x.w,0);for(const x of weights){r-=x.w;if(r<=0)return x.f}return weights[weights.length-1].f}
 function weatherRoll(){const options=loc().weather;weather=options[Math.floor(Math.random()*options.length)]}
-function cast(){if(state!=='idle')return;weatherRoll();fish=chooseFish();fishWeight=fish.weight[0]+Math.random()*(fish.weight[1]-fish.weight[0]);state='cast';castT=0;notify('Cast! A bite will come in 1–3 seconds.')}
-function bite(){state='fight';hits=0;misses=0;marker=Math.random();markerDir=Math.random()<.5?1:-1;target=Math.random()*.55+.2;targetDir=Math.random()<.5?1:-1;const g=gear();needed=Math.max(1,fish.difficulty+1-Math.floor((g.rod.help+g.reel.help)/2));}
-function press(){if(state==='idle'){cast();return}if(state==='fight'){const g=gear(),width=Math.min(.38,.13+g.rod.help*.035+g.reel.help*.05);const dist=Math.abs(marker-target);if(dist<=width/2){hits++;notify(`Good timing! ${Math.min(hits,needed)}/${needed}`);if(hits>=needed)catchFish()}else{misses++;notify(`Missed the green zone (${misses}/3)`);if(misses>=3){state='idle';notify('The fish got away. Cast and try again!')}}}}
-function catchFish(){state='idle';S.total++;const value=Math.max(2,Math.round((fish.weight[0]+fish.weight[1])*({common:3,uncommon:6,rare:12,epic:24,legendary:50}[fish.rarity])));S.inventory.push({name:fish.name,weight:fishWeight,value,rarity:fish.rarity});notify(`Caught ${fish.name} (${fishWeight.toFixed(1)} kg) · ${value} coins`);save();hud()}
-function hud(){const e=environment();$('stats').innerHTML=`<span class="chip">🪙 ${S.coins}</span><span class="chip">📍 ${loc().name}</span><span class="chip">${e.season} · ${e.temp.toFixed(0)}°C</span><span class="chip">${weatherIcon()} ${weather}</span>`;$('nav').innerHTML='<button data-page="map">🗺️ Places</button><button data-page="rods">🎣 Rods</button><button data-page="reels">⚙️ Reels</button><button data-page="bag">🎒 Sell fish</button><button data-page="settings">🌦️ Season</button>'}
+function cast(){if(state!=='idle')return;weatherRoll();fish=chooseFish();if(!fish){state='idle';hud();notify(`No fish are biting in these conditions (${environment().season}, ${environment().temp.toFixed(0)}°C, ${weather}). Try another season or location.`);return}fishWeight=fish.weight[0]+Math.random()*(fish.weight[1]-fish.weight[0]);state='cast';castT=0;hud();notify('Cast out! A fish will bite in 1–3 seconds.')}
+function bite(){state='fight';hits=0;misses=0;marker=Math.random()*.8+.1;markerDir=Math.random()<.5?1:-1;const g=gear();needed=Math.max(1,fish.difficulty-Math.floor((g.rod.help+g.reel.help)/2));hud();notify(`A ${fish.name} is hooked! Press SPACE when the moving line is in the green box.`)}
+function press(){if(state==='idle'){cast();return}if(state!=='fight')return;const g=gear(),width=Math.min(.48,.16+g.rod.help*.045+g.reel.help*.05);if(marker>=.5-width/2&&marker<=.5+width/2){hits++;if(hits>=needed)catchFish();else notify(`Good timing! ${needed-hits} more hit${needed-hits===1?'':'s'} to reel it in.`)}else{misses++;if(misses>=4){state='idle';fish=null;hud();notify('The fish got away. Cast again when you are ready.')}else notify(`Missed! ${4-misses} tries left — watch the bouncing line.`)}}
+function catchFish(){const rarityValue={common:3,uncommon:6,rare:12,epic:24,legendary:50};const value=Math.max(2,Math.round(fishWeight*rarityValue[fish.rarity]));S.total++;S.inventory.push({name:fish.name,weight:fishWeight,value,rarity:fish.rarity,loc:S.loc});const name=fish.name;state='idle';fish=null;save();hud();notify(`You caught ${name}! It is in your fish bag.`)}
+function hud(){const e=environment();$('stats').innerHTML=`<span class="chip">🪙 ${S.coins}</span><span class="chip">📍 ${loc().name}</span><span class="chip">${e.season} · ${e.temp.toFixed(0)}°C · ${weatherIcon()}</span><span class="chip">🎣 ${S.total} caught</span>`;$('nav').innerHTML='<button class="navbtn" data-page="map">🗺️ Places</button><button class="navbtn" data-page="rods">🎣 Rods</button><button class="navbtn" data-page="reels">⚙️ Reels</button><button class="navbtn" data-page="bag">🐟 Fish bag</button><button class="navbtn" data-page="settings">☀️ Settings</button>'}
 function weatherIcon(){return{clear:'☀️',cloudy:'☁️',rain:'🌧️',snow:'❄️'}[weather]||'☀️'}
 function openPanel(title,content){const o=$('overlay');o.innerHTML=`<div class="panel"><div class="panelhead"><h2>${title}</h2><button class="red" onclick="closePanel()">Close</button></div>${content}</div>`;o.classList.add('open')}
-function closePanel(){ $('overlay').classList.remove('open');$('overlay').innerHTML=''}
-function showMap(){openPanel('Choose a fishing place',`<div class="grid">${LOCATIONS.map(l=>`<div class="card"><h3>${l.name}</h3><div>${l.continent} · usual ${l.temp}°C</div><button class="green" onclick="travel('${l.id}')">Fish here</button></div>`).join('')}</div>`)}
-function travel(id){S.loc=id;weatherRoll();state='idle';save();closePanel();hud();notify(`Travelled to ${loc().name}`)}
-function showShop(type){const rows=type==='rods'?RODS:REELS,owned=type==='rods'?S.ownedRods:S.ownedReels,current=type==='rods'?S.rod:S.reel;openPanel(type==='rods'?'Rod shop':'Reel shop',`<p>Better gear gives you a wider green timing zone and fewer hits needed.</p><div class="grid">${rows.map(x=>`<div class="card"><h3>${x.name}</h3><div>Timing help: +${x.help}</div><p>Price: ${x.cost} coins</p>${owned.includes(x.id)?`<button class="${current===x.id?'green':''}" onclick="equip('${type}','${x.id}')">${current===x.id?'Equipped':'Equip'}</button>`:`<button ${S.coins<x.cost?'disabled':''} onclick="buy('${type}','${x.id}')">Buy</button>`}</div>`).join('')}</div>`)}
-function buy(type,id){const x=(type==='rods'?RODS:REELS).find(a=>a.id===id),owned=type==='rods'?S.ownedRods:S.ownedReels;if(!x||S.coins<x.cost)return;S.coins-=x.cost;owned.push(id);if(type==='rods')S.rod=id;else S.reel=id;save();hud();showShop(type)}
+function closePanel(){$('overlay').classList.remove('open');$('overlay').innerHTML=''}
+function showMap(){openPanel('Choose a fishing place',`<div class="grid">${LOCATIONS.map(l=>`<div class="card"><h3>${l.name}</h3><div>${l.continent} · usual ${l.temp}°C</div><button class="green" onclick="travel('${l.id}')">${S.loc===l.id?'Current place':'Travel here'}</button></div>`).join('')}</div>`)}
+function travel(id){if(!LOCATIONS.some(x=>x.id===id))return;S.loc=id;weatherRoll();state='idle';save();closePanel();hud();notify(`Travelled to ${loc().name}`)}
+function showShop(type){const rods=type==='rods',rows=rods?RODS:REELS,owned=rods?S.ownedRods:S.ownedReels,current=rods?S.rod:S.reel;openPanel(rods?'Rod shop':'Reel shop',`<p>Better ${rods?'rods':'reels'} widen the green timing box and make fish easier to catch.</p><div class="grid">${rows.map(x=>{const has=owned.includes(x.id);return `<div class="card"><h3>${x.name}</h3><div>Timing help: +${x.help} · ${has?'Owned':`Cost: ${x.cost} coins`}</div><button class="${has?'blue':'green'}" ${!has&&S.coins<x.cost?'disabled':''} onclick="${has?`equip('${type}','${x.id}')`:`buy('${type}','${x.id}')`}">${has?(current===x.id?'Equipped':'Equip'):'Buy'}</button></div>`}).join('')}</div>`)}
+function buy(type,id){const rows=type==='rods'?RODS:REELS,x=rows.find(a=>a.id===id),owned=type==='rods'?S.ownedRods:S.ownedReels;if(!x||owned.includes(id)||S.coins<x.cost)return;S.coins-=x.cost;owned.push(id);if(type==='rods')S.rod=id;else S.reel=id;save();hud();showShop(type);notify(`${x.name} purchased and equipped!`)}
 function equip(type,id){if(type==='rods'&&S.ownedRods.includes(id))S.rod=id;if(type==='reels'&&S.ownedReels.includes(id))S.reel=id;save();hud();showShop(type)}
-function showBag(){const value=S.inventory.reduce((n,f)=>n+f.value,0);openPanel('Your fish',`<p>${S.inventory.length} fish · worth ${value} coins total</p><div class="grid">${S.inventory.length?S.inventory.map(f=>`<div class="card"><b style="color:${RARITY[f.rarity]}">${f.name}</b><div>${f.weight.toFixed(1)} kg · ${f.value} coins</div></div>`).join(''):'<p>No fish yet—cast a line to get started!</p>'}</div><p><button class="gold" onclick="sellAll()" ${S.inventory.length?'':'disabled'}>Sell all fish</button></p>`)}
+function showBag(){const value=S.inventory.reduce((n,f)=>n+f.value,0);openPanel('Your fish',`<p>${S.inventory.length} fish · worth ${value} coins total</p><div class="grid">${S.inventory.length?S.inventory.slice().reverse().map(f=>`<div class="card"><h3 style="color:${RARITY[f.rarity]||'#fff'}">${f.name}</h3><div>${f.weight.toFixed(1)} kg · ${f.rarity} · ${f.value} coins</div></div>`).join(''):'<p>Your bag is empty. Cast a line to catch fish!</p>'}</div><button class="green" ${value===0?'disabled':''} onclick="sellAll()">Sell all for ${value} coins</button>`)}
 function sellAll(){const value=S.inventory.reduce((n,f)=>n+f.value,0);S.coins+=value;S.inventory=[];save();hud();showBag();notify(`Sold your fish for ${value} coins`)}
-function settings(){openPanel('Season and conditions',`<p>The season, temperature, rain and fishing location affect which fish can bite. Weather changes each cast.</p><label>Season</label><select onchange="S.season=this.value;save();hud()">${['auto',...SEASONS].map(x=>`<option value="${x}" ${S.season===x?'selected':''}>${x[0].toUpperCase()+x.slice(1)}</option>`).join('')}</select><p class="small">Auto season changes as you play. Fish with season, weather or temperature requirements only appear when those conditions match.</p>`)}
+function settings(){openPanel('Season and conditions',`<p>Season, temperature, rain, snow and location determine which fish can bite. Weather is rolled for each cast.</p><label for="seasonSelect">Season</label><select id="seasonSelect" onchange="setSeason(this.value)"><option value="spring" ${S.season==='spring'?'selected':''}>Spring</option><option value="summer" ${S.season==='summer'?'selected':''}>Summer</option><option value="autumn" ${S.season==='autumn'?'selected':''}>Autumn</option><option value="winter" ${S.season==='winter'?'selected':''}>Winter</option><option value="auto" ${S.season==='auto'?'selected':''}>Auto (changes over time)</option></select><p>Current conditions: ${environment().season}, ${environment().temp.toFixed(0)}°C, ${weather}.</p>`)}
+function setSeason(value){if(SEASONS.includes(value)||value==='auto'){S.season=value;save();hud();settings()}}
 $('nav').addEventListener('click',e=>{const p=e.target.closest('button')?.dataset.page;if(p==='map')showMap();if(p==='rods')showShop('rods');if(p==='reels')showShop('reels');if(p==='bag')showBag();if(p==='settings')settings()});
-$('fishBtn').addEventListener('pointerdown',e=>{e.preventDefault();press()});canvas.addEventListener('pointerdown',e=>{if(state==='fight')press();else if(state==='idle')press()});window.addEventListener('keydown',e=>{if(e.code==='Space'&&!e.repeat&&!$('overlay').classList.contains('open')){e.preventDefault();press()}});
-function resize(){const dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.floor(innerWidth*dpr);canvas.height=Math.floor(innerHeight*dpr);ctx.setTransform(dpr,0,0,dpr,0,0)}addEventListener('resize',resize);resize();
-function draw(){const w=innerWidth,h=innerHeight,waterY=h*.53,l=loc(),g=ctx.createLinearGradient(0,0,0,waterY);g.addColorStop(0,'#86cfff');g.addColorStop(1,'#e3e5b3');ctx.fillStyle=g;ctx.fillRect(0,0,w,waterY);ctx.fillStyle=l.color;ctx.fillRect(0,waterY,w,h-waterY);ctx.fillStyle='#ffffff33';for(let i=0;i<8;i++){const x=((i*161+clock*35)% (w+100))-50;ctx.beginPath();ctx.ellipse(x,waterY+30+(i%4)*28,45,3,0,0,7);ctx.fill()}
-// Dock, angler and fishing line. Fish are intentionally never drawn in the water.
-ctx.fillStyle='#704c2b';ctx.fillRect(25,waterY-8,170,13);ctx.fillRect(42,waterY+5,9,38);ctx.fillRect(160,waterY+5,9,38);ctx.strokeStyle='#e8c39a';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(90,waterY-8);ctx.lineTo(90,waterY-48);ctx.stroke();ctx.fillStyle='#f2c9a0';ctx.beginPath();ctx.arc(90,waterY-59,12,0,7);ctx.fill();ctx.strokeStyle='#d84a3a';ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(88,waterY-40);ctx.lineTo(102,waterY-15);ctx.stroke();ctx.strokeStyle='#e9d39b';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(100,waterY-35);ctx.quadraticCurveTo(180,waterY-115,Math.min(w-50,300),waterY+45);ctx.stroke();
-if(['cast','wait','fight'].includes(state)){let bx=Math.min(w-50,300),by=waterY+45;if(state==='cast'){const p=Math.min(1,castT/.45);bx=100+(bx-100)*p;by=waterY-35+(by-(waterY-35))*p-Math.sin(p*Math.PI)*70}else if(state==='fight')by+=Math.sin(clock*4)*3;ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(bx-5,by-6);ctx.lineTo(bx-5,by+5);ctx.stroke();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(bx,by,5,0,7);ctx.fill();ctx.fillStyle='#ef4747';ctx.fillRect(bx-5,by-5,10,5)}
-if(state==='fight'){const bw=Math.min(440,w-52),x=(w-bw)/2,y=h*.76,zone=Math.min(.38,.13+gear().rod.help*.035+gear().reel.help*.05);ctx.fillStyle='#07152ddd';ctx.fillRect(x-14,y-38,bw+28,110);ctx.fillStyle='#fff';ctx.font='bold 16px system-ui';ctx.textAlign='center';ctx.fillText(`PRESS SPACE IN THE GREEN ZONE  ·  ${hits}/${needed} hits`,w/2,y-14);ctx.fillStyle='#bc3030';ctx.fillRect(x,y,bw,28);ctx.fillStyle='#39d66f';ctx.fillRect(x+(target-zone/2)*bw,y,zone*bw,28);ctx.strokeStyle='#fff';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(x+marker*bw,y-8);ctx.lineTo(x+marker*bw,y+36);ctx.stroke();ctx.font='13px system-ui';ctx.fillStyle='#fff';ctx.fillText(`Misses ${misses}/3`,w/2,y+59)}ctx.textAlign='left';requestAnimationFrame(draw)}
-let prev=performance.now();function loop(now){const dt=Math.min(.05,(now-prev)/1000);prev=now;clock+=dt;if(state==='cast'){castT+=dt;if(castT>=.45){state='wait';biteAt=1+Math.random()*2;castT=0}}else if(state==='wait'){castT+=dt;if(castT>=biteAt)bite()}if(state==='fight'){const g=gear(),speed=1.05+fish.difficulty*.11-g.reel.help*.08;marker+=markerDir*speed*dt;if(marker>.98){marker=.98;markerDir=-1}if(marker<.02){marker=.02;markerDir=1}target+=targetDir*(.12+fish.difficulty*.025)*dt;if(target>.82){target=.82;targetDir=-1}if(target<.18){target=.18;targetDir=1}}if(Math.floor(clock)%8===0)hud();requestAnimationFrame(loop)}
-function updateHint(){const text={idle:'Press SPACE or tap FISH to cast',cast:'Casting…',wait:'Waiting for a bite… (it takes 1–3 seconds)',fight:'Tap SPACE when the moving line is inside the green area'};$('hint').textContent=text[state]}
-const originalLoop=loop;function frame(n){originalLoop(n);updateHint()}requestAnimationFrame(frame);weatherRoll();hud();
+$('fishBtn').addEventListener('pointerdown',e=>{e.preventDefault();press()});
+canvas.addEventListener('pointerdown',()=>{if(state==='fight'||state==='idle')press()});
+window.addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault();press()}if(e.key==='Escape')closePanel()});
+function resize(){const dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.floor(innerWidth*dpr);canvas.height=Math.floor(innerHeight*dpr);ctx.setTransform(dpr,0,0,dpr,0,0)}
+addEventListener('resize',resize);resize();
+function draw(){const w=innerWidth,h=innerHeight,waterY=h*.53,l=loc();let g=ctx.createLinearGradient(0,0,0,waterY);g.addColorStop(0,'#86cfff');g.addColorStop(1,'#e3e5b3');ctx.fillStyle=g;ctx.fillRect(0,0,w,waterY);ctx.fillStyle=l.color;ctx.fillRect(0,waterY,w,h-waterY);ctx.fillStyle='#ffffff18';for(let i=0;i<8;i++){const y=waterY+18+i*24;ctx.fillRect((clock*35+i*97)%w,y,60,2)}
+ // Dock, angler and line. Fish are deliberately never drawn in the water.
+ ctx.fillStyle='#704c2b';ctx.fillRect(25,waterY-8,170,13);ctx.fillRect(42,waterY+5,9,38);ctx.fillRect(160,waterY+5,9,38);ctx.strokeStyle='#e8c39a';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(90,waterY-8);ctx.lineTo(115,waterY-72);ctx.stroke();ctx.fillStyle='#ffd2aa';ctx.beginPath();ctx.arc(119,waterY-72,11,0,Math.PI*2);ctx.fill();ctx.fillStyle='#24466c';ctx.fillRect(106,waterY-62,25,40);
+ if(['cast','wait','fight'].includes(state)){let bx=Math.min(w-50,300),by=waterY+45;if(state==='cast'){const p=Math.min(1,castT/.45);bx=100+(bx-100)*p;by=waterY-35+(by-(waterY-35))*p-Math.sin(p*Math.PI)*65}ctx.strokeStyle='#ffffffaa';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(115,waterY-72);ctx.lineTo(bx,by);ctx.stroke();ctx.fillStyle='#ff594f';ctx.beginPath();ctx.arc(bx,by,7,0,Math.PI*2);ctx.fill();if(state==='wait'){ctx.fillStyle='#fff';ctx.font='bold 16px system-ui';ctx.textAlign='center';ctx.fillText('Waiting for a bite…',w/2,waterY+35)}}
+ if(state==='fight'){const bw=Math.min(440,w-52),x=(w-bw)/2,y=h*.76,zone=Math.min(.48,.16+gear().rod.help*.045+gear().reel.help*.05),greenW=bw*zone;ctx.fillStyle='#07152ddd';ctx.fillRect(x-14,y-45,bw+28,132);ctx.fillStyle='#fff';ctx.font='bold 16px system-ui';ctx.textAlign='center';ctx.fillText(`${fish.name} · hit ${Math.min(hits+1,needed)} of ${needed}`,w/2,y-20);ctx.fillStyle='#29384d';ctx.fillRect(x,y,bw,28);ctx.fillStyle='#47c96b';ctx.fillRect(x+bw*.5-greenW/2,y,greenW,28);ctx.strokeStyle='#fff';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x+marker*bw,y-5);ctx.lineTo(x+marker*bw,y+33);ctx.stroke();ctx.fillStyle='#fff';ctx.font='13px system-ui';ctx.fillText('Press SPACE when the white line is inside the green box',w/2,y+55);ctx.fillStyle='#ff8b76';ctx.fillText(`Misses: ${misses}/4`,w/2,y+76)}
+ }
+let prev=performance.now();function loop(now){const dt=Math.min(.05,(now-prev)/1000);prev=now;clock+=dt;if(S.season==='auto'&&Math.floor(clock/90)!==Math.floor((clock-dt)/90))hud();if(state==='cast'){castT+=dt;if(castT>=.45){state='wait';biteAt=1+Math.random()*2;castT=0}}else if(state==='wait'){biteAt-=dt;if(biteAt<=0)bite()}if(state==='fight'){marker+=markerDir*dt*(.75+fish.difficulty*.14);if(marker>=.98){marker=.98;markerDir=-1}if(marker<=.02){marker=.02;markerDir=1}}draw();updateHint();requestAnimationFrame(loop)}
+function updateHint(){const text={idle:'Press SPACE or tap FISH to cast',cast:'Casting…',wait:'Waiting for a bite… (1–3 seconds)',fight:'Press SPACE when the bouncing white line is inside the green box'};$('hint').textContent=text[state]}
+weatherRoll();hud();requestAnimationFrame(loop);
 </script>
 </body>
 </html>
